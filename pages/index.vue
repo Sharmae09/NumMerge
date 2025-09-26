@@ -11,80 +11,82 @@
         </div>
       </ion-modal>
 
-      <div class="d-flex flex-column align-items-center">
-        <!-- Game Grid -->
-        <div class="grid-container">
-          <div class="grid flex-col">
-            <div class="flex details">
-              <div class="score-item">
-                <div class="score-label">Score</div>
-                <div class="score-value">{{ score }}</div>
-              </div>
+      <!-- Game Grid -->
+      <div class="grid-container">
+        <div class="bg-black flex-col">
+          <div class="flex score-details-menu">
+            <div class="score-item">
+              <div class="score-label">Score</div>
+              <div class="score-value">{{ score }}</div>
+            </div>
+            <div class="score-item">
+              <div class="score-label">Best</div>
+              <div class="score-value">{{ bestScore }}</div>
+            </div>
+          </div>
+          <div class="grid column-shoot-screen">
+            <div
+              v-for="(column, colIndex) in grid"
+              :key="colIndex"
+              class="column"
+              :class="{
+                'column-full': isColumnFull(colIndex),
+                'column-hover': hoveredColumn === colIndex,
+              }"
+              @click="shootBlock(colIndex)"
+              @mouseenter="hoveredColumn = colIndex"
+              @mouseleave="hoveredColumn = -1"
+            >
+              <!-- Blocks in column (at top) -->
+              <div
+                v-for="(block, blockIndex) in column"
+                :key="block.id"
+                class="block"
+                :class="[
+                  `block-${block.value}`,
+                  { merging: block.merging },
+                  { 'merge-target': block.mergeTarget },
+                ]"
+                :style="{
+                  animationDelay: `${blockIndex * 0.1}s`,
+                  zIndex: block.merging ? 1000 : 1,
+                }"
+              >
+                <span class="block-text">{{ block.value }}</span>
+                <div class="block-shine"></div>
 
-              <div class="next-block text-center">
-                <div class="next-label">Next</div>
-                <div
-                  class="block preview-block"
-                  :class="`block-${nextBlockValue}`"
-                >
-                  {{ nextBlockValue }}
+                <!-- Merge effect particles -->
+                <div v-if="block.merging" class="merge-particles">
+                  <div class="particle" v-for="i in 8" :key="i"></div>
                 </div>
               </div>
-              <div class="score-item">
-                <div class="score-label">Best</div>
-                <div class="score-value">{{ bestScore }}</div>
+
+              <!-- Spacer to push indicator and preview to bottom -->
+              <div class="column-spacer"></div>
+
+              <!-- Preview block when hovering at bottom -->
+              <div
+                v-if="hoveredColumn === colIndex && !isColumnFull(colIndex)"
+                class="block preview-block bottom-preview"
+                :class="`block-${nextBlockValue}`"
+              >
+                {{ nextBlockValue }}
+              </div>
+
+              <!-- Column indicator at bottom -->
+              <div class="column-indicator">
+                <ion-icon name="arrow-up-outline"></ion-icon>
               </div>
             </div>
-            <div class="grid column-fall-screen">
+          </div>
+          <div class="flex items-center justify-center">
+            <div class="next-block text-center">
+              <div class="next-label">Next</div>
               <div
-                v-for="(column, colIndex) in grid"
-                :key="colIndex"
-                class="column"
-                :class="{
-                  'column-full': isColumnFull(colIndex),
-                  'column-hover': hoveredColumn === colIndex,
-                }"
-                @click="dropBlock(colIndex)"
-                @mouseenter="hoveredColumn = colIndex"
-                @mouseleave="hoveredColumn = -1"
+                class="block preview-block mx-auto"
+                :class="`block-${nextBlockValue}`"
               >
-                <!-- Column indicator -->
-                <div class="column-indicator">
-                  <ion-icon name="arrow-down-outline"></ion-icon>
-                </div>
-
-                <!-- Blocks in column -->
-                <div
-                  v-for="(block, blockIndex) in column"
-                  :key="block.id"
-                  class="block"
-                  :class="[
-                    `block-${block.value}`,
-                    { merging: block.merging },
-                    { 'merge-target': block.mergeTarget },
-                  ]"
-                  :style="{
-                    animationDelay: `${blockIndex * 0.1}s`,
-                    zIndex: block.merging ? 1000 : 1,
-                  }"
-                >
-                  <span class="block-text">{{ block.value }}</span>
-                  <div class="block-shine"></div>
-
-                  <!-- Merge effect particles -->
-                  <div v-if="block.merging" class="merge-particles">
-                    <div class="particle" v-for="i in 8" :key="i"></div>
-                  </div>
-                </div>
-
-                <!-- Preview block when hovering -->
-                <div
-                  v-if="hoveredColumn === colIndex && !isColumnFull(colIndex)"
-                  class="block preview-block"
-                  :class="`block-${nextBlockValue}`"
-                >
-                  {{ nextBlockValue }}
-                </div>
+                {{ nextBlockValue }}
               </div>
             </div>
           </div>
@@ -190,7 +192,7 @@ function addMergeIndicator(col: number, row: number, value: number) {
 
   if (rect) {
     const x = rect.left + col * 73 + 35; // Approximate position
-    const y = rect.top + 100 + row * 20;
+    const y = rect.top + 100 + (maxHeight - row) * 20; // Adjusted for upward shooting
 
     const indicator: MergeIndicator = {
       id: indicatorId++,
@@ -307,10 +309,10 @@ function mergeConnectedBlocks(targetColumn?: number) {
               grid[pos.col].splice(pos.row, 1);
             });
 
-          // Decide column for the merged block
+          // Decide column for the merged block - add at bottom for upward shooting
           const dropCol =
             targetColumn !== undefined ? targetColumn : connected[0].col;
-          grid[dropCol].push({
+          grid[dropCol].unshift({
             value: totalValue,
             id: nextId++,
           });
@@ -336,10 +338,11 @@ function mergeConnectedBlocks(targetColumn?: number) {
   }
 }
 
-function dropBlock(columnIndex: number) {
+function shootBlock(columnIndex: number) {
   if (isColumnFull(columnIndex) || gameOver.value) return;
 
   const column = grid[columnIndex];
+  // Add block at the bottom of the column
   column.push({ value: nextBlockValue.value, id: nextId++ });
 
   // Start merge process after a short delay
@@ -359,8 +362,6 @@ function dropBlock(columnIndex: number) {
 
 <style scoped>
 .game-content {
-  /* --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px; */
   position: relative;
 }
 
@@ -412,7 +413,6 @@ function dropBlock(columnIndex: number) {
 
 .grid-container {
   display: flex;
-
   justify-content: center;
   margin-bottom: 20px;
   position: relative;
@@ -423,13 +423,11 @@ function dropBlock(columnIndex: number) {
   gap: 8px;
   background: rgba(0, 0, 0, 0.975);
   backdrop-filter: blur(10px);
-  height: 100vh;
-  width: 100vw;
 }
 
 .column {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 5px;
   width: 65px;
   min-height: 400px;
@@ -445,7 +443,7 @@ function dropBlock(columnIndex: number) {
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
 }
-
+/* When you hover to  */
 .column-hover {
   border-color: rgba(255, 255, 255, 0.5);
   background: rgba(255, 255, 255, 0.1);
@@ -457,20 +455,29 @@ function dropBlock(columnIndex: number) {
   cursor: not-allowed;
 }
 
+.column-spacer {
+  flex: 1; /* This pushes the indicator and preview to the bottom */
+}
+
 .column-indicator {
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.6);
   font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
   opacity: 0;
   transition: opacity 0.3s ease;
+  margin-top: auto; /* Ensures it stays at bottom */
 }
 
 .column:hover .column-indicator {
   opacity: 1;
-  animation: bounce 1s infinite;
+  animation: bounceUp 1s infinite;
+}
+
+.bottom-preview {
+  margin-bottom: 5px; /* Small gap above the indicator */
 }
 
 .block {
@@ -485,7 +492,7 @@ function dropBlock(columnIndex: number) {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   position: relative;
   overflow: hidden;
-  animation: dropIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: shootUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Merge animations */
@@ -671,9 +678,9 @@ function dropBlock(columnIndex: number) {
 }
 
 /* Enhanced animations */
-@keyframes dropIn {
+@keyframes shootUp {
   from {
-    transform: translateY(-100px);
+    transform: translateY(100px);
     opacity: 0;
   }
   to {
@@ -741,19 +748,19 @@ function dropBlock(columnIndex: number) {
   }
 }
 
-@keyframes bounce {
+@keyframes bounceUp {
   0%,
   20%,
   50%,
   80%,
   100% {
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
   40% {
-    transform: translateX(-50%) translateY(-10px);
+    transform: translateY(-10px);
   }
   60% {
-    transform: translateX(-50%) translateY(-5px);
+    transform: translateY(-5px);
   }
 }
 
@@ -836,13 +843,16 @@ function dropBlock(columnIndex: number) {
   }
 }
 
-.details {
+.score-details-menu {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
-.column-fall-screen {
-  background: #ee5a52;
+
+.column-shoot-screen {
+  background: #4a90e2;
+  height: 80vh;
+  width: 100vw;
 }
 </style>
