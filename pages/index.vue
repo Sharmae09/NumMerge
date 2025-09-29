@@ -39,9 +39,9 @@
       </div>
 
       <!-- Game Grid -->
-      <div class="game-area">
-        <div class="grid-container">
-          <div
+      <ion-grid class="game-area">
+        <ion-row class="grid-container">
+          <ion-col
             v-for="(column, colIndex) in grid"
             :key="colIndex"
             class="game-column"
@@ -52,7 +52,7 @@
             @click="shootBlock(colIndex)"
           >
             <!-- Blocks in column (positioned from top) -->
-            <div
+            <ion-row
               v-for="(block, blockIndex) in column"
               :key="block.id"
               class="number-block"
@@ -82,35 +82,12 @@
                 <div class="liquid-stream stream-1"></div>
                 <div class="liquid-stream stream-2"></div>
               </div>
-            </div>
-          </div>
-        </div>
+            </ion-row>
+          </ion-col>
+        </ion-row>
 
         <!-- Liquid connection effects overlay -->
-        <div class="liquid-connections-overlay">
-          <div
-            v-for="connection in liquidConnections"
-            :key="connection.id"
-            class="liquid-connection"
-            :style="{
-              left: `${connection.x1}px`,
-              top: `${connection.y1}px`,
-              width: `${Math.sqrt(
-                Math.pow(connection.x2 - connection.x1, 2) +
-                  Math.pow(connection.y2 - connection.y1, 2)
-              )}px`,
-              transform: `rotate(${
-                (Math.atan2(
-                  connection.y2 - connection.y1,
-                  connection.x2 - connection.x1
-                ) *
-                  180) /
-                Math.PI
-              }deg)`,
-            }"
-          ></div>
-        </div>
-      </div>
+      </ion-grid>
 
       <!-- Bottom Section -->
       <div class="bottom-section">
@@ -215,10 +192,11 @@
 /* Game Area */
 .game-area {
   flex: 1;
-  padding: 20px;
+  padding: 0;
   position: relative;
   overflow: hidden;
   height: 60vh;
+  /* background: yellow; */
 }
 
 .grid-container {
@@ -226,6 +204,7 @@
   justify-content: center;
   gap: 10px;
   height: 100%;
+  padding: 10px;
 }
 
 .game-column {
@@ -866,8 +845,8 @@
   }
 
   .number-block {
-    width: 3rem;
-    height: 3rem;
+    width: calc(3rem + 3vw);
+    height: calc(3rem + 3vw);
   }
 
   .block-number {
@@ -899,7 +878,7 @@ interface Block {
   liquidAbsorbing?: boolean;
   liquidStretching?: boolean;
 }
-
+// the numbers that flies up when merging
 interface MergeIndicator {
   id: number;
   value: number;
@@ -918,7 +897,7 @@ interface Position {
   col: number;
   row: number;
 }
-
+// connects the blocks that need to be merged with a liquid effect
 interface LiquidConnection {
   id: number;
   x1: number;
@@ -929,24 +908,51 @@ interface LiquidConnection {
 
 const columns = 5;
 const maxHeight = 7;
+/*Array of blocks in each column
+  grid = [ [Block, Block], [Block], // column 0
+  [], // column 1
+  [Block, Block, Block],  //column 2
+  [Block, Block] ] // column 3
+*/
+/* 
+  Array.from({length: columns})
+  creates an array with 'columns' number of empty arrays
+
+  () = > [] - is what the array makes for each column
+
+  reactive - lets vue trach the changes to the array like ref()
+
+  Block - is based is the interface that defines a block
+
+  [][] - means its a 2D array (array of arrays) 
+
+*/
 const grid = reactive<Block[][]>(Array.from({ length: columns }, () => []));
 const score = ref(0);
 const bestScore = ref(0);
 const gameOver = ref(false);
 const nextBlockValue = ref(2);
 const gems = ref(0);
+/*
+mergeindicators - array of the floating +score indicators
+*/
 const mergeIndicators = reactive<MergeIndicator[]>([]);
+// array of the liquid connections between blocks
 const liquidConnections = reactive<LiquidConnection[]>([]);
 const powerUps = reactive<PowerUps>({ hammer: 150, swap: 175, undo: 75 });
 const highestTile = ref(2);
 
+// IDs for indicators and connections
 let indicatorId = 1;
 let connectionId = 1;
+// Fallback counter for UUID generation
 let uuidCounterFallback = 1;
 
 // --- Utility ---
+// Gunereate UUID for blocks which helps the id to be unique
 function generateUUID(): string {
   if (
+    // check if crypto.randomUUID is available (modern browsers)
     typeof crypto !== "undefined" &&
     typeof (crypto as any).randomUUID === "function"
   ) {
@@ -956,16 +962,18 @@ function generateUUID(): string {
 }
 
 function createBlock(value: number): Block {
-  tryUpdateHighestTile(value);
   return { value, id: generateUUID() };
 }
 
-function tryUpdateHighestTile(val: number) {
-  if (val > highestTile.value) highestTile.value = val;
+function tryUpdateHighestTile(value: number) {
+  // if the value of the generated block is higher than the current
+  // highest block value then update the highest block value
+  if (value > highestTile.value) highestTile.value = value;
 }
 
 // --- Lifecycle ---
 onMounted(() => {
+  // Load best score from localStorage if available
   if (process.client) {
     const saved = localStorage.getItem("numberMergeBestScore");
     if (saved) bestScore.value = parseInt(saved, 10);
@@ -975,29 +983,51 @@ onMounted(() => {
 
 // --- Weighted Random ---
 function weightedChoice<T>(items: T[], weights: number[]): T {
+  // Gneric <T> means it can be any type
+  // items - array of items to choose from
+  // weights - array of weights corresponding to the items [0.70, 0.20, 10]
   const sum = weights.reduce((a, b) => a + b, 0);
+  // get sum of the weights
   let r = Math.random() * sum;
+  // get a random number between 0 and sum of weights
   for (let i = 0; i < items.length; i++) {
+    // loop through the items
+    // subtract the weight from the random number
+    // if its less than or equal to 0 then return the item
     if ((r -= weights[i]) <= 0) return items[i];
   }
+  // fallback in case of rounding errors
+  // then return the last item
   return items[items.length - 1];
 }
 
 function generateNextBlock() {
+  // determine the max allowed value for the next block
+  // which is half of the highest tile value
   const maxAllowed = Math.max(2, Math.floor(highestTile.value / 2));
+  // generate options which are powers of 2 up to maxAllowed
   const options: number[] = [];
+  // generate powers of 2 up to maxAllowed
+  // then put them in the options array
   for (let p = 2; p <= maxAllowed; p *= 2) options.push(p);
+  // if no option is generated then put the value 2 in the options
   if (options.length === 0) options.push(2);
 
   let chosen: number;
+  // like let chosen = 0
+
+  // if there is only one option then choose it
   if (options.length === 1) chosen = options[0];
+  // if there are two options then choose the first one with 75% chance
   else if (options.length === 2) chosen = weightedChoice(options, [0.75, 0.25]);
+  // if there is more than one option the choose the first one with 60% chance
   else {
     const restWeight = 0.15;
     chosen = weightedChoice(options, [
-      0.6,
-      0.25,
-      ...Array(options.length - 2).fill(restWeight / (options.length - 2)),
+      0.6, // 60% chance for the smallest option
+      0.25, // 30% chance for the second smallest option
+      ...Array(options.length - 2) // rest of the options //[0.05, 0.05, 0.05]
+        .fill(restWeight / (options.length - 2)), // evenly distribute the rest weight
     ]);
   }
 
@@ -1008,19 +1038,33 @@ function generateNextBlock() {
 function isColumnFull(columnIndex: number) {
   return grid[columnIndex].length >= maxHeight;
 }
+// check if game over
+// if all the columns are full then game over
+// and the next block does not mathch any of the bottom blocks in the columns
 
 function checkGameOver() {
+  // if there is at least one column that is not full then not game over
   if (grid.some((c) => c.length < maxHeight)) return false;
+  // if all columns are full then check if there are any possible merges
   for (let c = 0; c < columns; c++) {
+    if (grid[c][maxHeight - 1].value === nextBlockValue.value) return false;
+    // loop through each column
     for (let r = 0; r < grid[c].length; r++) {
+      // loop through each row in the column
       const v = grid[c][r].value;
+      // get the value of the block
+      // check the neighbors (left, right, up, down)
       const neighbors = [
         { col: c - 1, row: r },
         { col: c + 1, row: r },
         { col: c, row: r - 1 },
         { col: c, row: r + 1 },
       ];
+      // loop through the neighbours
       for (const n of neighbors) {
+        // if the neighbour is within bounds
+        // and has the same value as the current block
+        // then not game over
         if (
           n.col >= 0 &&
           n.col < columns &&
@@ -1060,70 +1104,35 @@ function usePowerUp(type: keyof PowerUps) {
   console.log(`Used ${type}`);
 }
 
-
-
-async function createLiquidConnection(pos1: Position, pos2: Position) {
-  await nextTick();
-  const colEls = Array.from(
-    document.querySelectorAll(".game-column")
-  ) as HTMLElement[];
-
-  const getBlockPosition = (col: number, row: number) => {
-    const colEl = colEls[col];
-    if (!colEl) return { x: 0, y: 0 };
-
-    const colRect = colEl.getBoundingClientRect();
-    const gameArea = document.querySelector(".game-area") as HTMLElement;
-    const gameRect = gameArea?.getBoundingClientRect() || { left: 0, top: 0 };
-
-    return {
-      x: colRect.left - gameRect.left + colRect.width / 2,
-      y: colRect.top - gameRect.top + row * 52 + 30,
-    };
-  };
-
-  const start = getBlockPosition(pos1.col, pos1.row);
-  const end = getBlockPosition(pos2.col, pos2.row);
-
-  const connection: LiquidConnection = {
-    id: connectionId++,
-    x1: start.x,
-    y1: start.y,
-    x2: end.x,
-    y2: end.y,
-  };
-
-  liquidConnections.push(connection);
-
-  setTimeout(() => {
-    const idx = liquidConnections.findIndex((c) => c.id === connection.id);
-    if (idx > -1) liquidConnections.splice(idx, 1);
-  }, 800);
-}
-
 async function addMergeIndicator(col: number, row: number, value: number) {
+  // waits for dom to update first
   await nextTick();
-  const colEls = Array.from(
-    document.querySelectorAll(".game-column")
-  ) as HTMLElement[];
-  const colEl = colEls[col];
+  // get all the columns with the class game-column
+  // then index into the array col
+  const colEl = document.querySelectorAll<HTMLElement>(".game-column")[col];
   if (!colEl) return;
 
+  // get all the blocks in the column
   const blockEls = Array.from(
     colEl.querySelectorAll(".number-block")
   ) as HTMLElement[];
-  let x = 0,
-    y = 0;
-  if (blockEls[row]) {
-    const rect = blockEls[row].getBoundingClientRect();
-    x = rect.left + rect.width / 2;
-    y = rect.top + rect.height / 2;
-  } else {
-    const crect = colEl.getBoundingClientRect();
-    x = crect.left + crect.width / 2;
-    y = crect.bottom - 30;
+
+  // if the row exists then get its position
+  function getElementCenter(el: HTMLElement) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   }
 
+  function getBottomCenter(el: HTMLElement, offset = 0) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.bottom - offset };
+  }
+
+  let { x, y } = blockEls[row]
+    ? getElementCenter(blockEls[row])
+    : getBottomCenter(colEl, 30);
+
+  // create the indicator
   const indicator: MergeIndicator = {
     id: indicatorId++,
     value,
@@ -1134,14 +1143,243 @@ async function addMergeIndicator(col: number, row: number, value: number) {
 
   mergeIndicators.push(indicator);
 
+  // remove the indicator after the animation is done (1.6s)
   setTimeout(() => {
     const idx = mergeIndicators.findIndex((i) => i.id === indicator.id);
     if (idx > -1) mergeIndicators.splice(idx, 1);
   }, 1600);
 }
+// --- Enhanced Liquid Merge Algorithm ---
+function clearAllAnimationStates() {
+  for (let c = 0; c < columns; c++) {
+    for (let r = 0; r < grid[c].length; r++) {
+      if (grid[c][r]) {
+        grid[c][r].liquidMerging = false;
+        grid[c][r].liquidAbsorbing = false;
+        grid[c][r].liquidStretching = false;
+      }
+    }
+  }
+}
+
+// async function mergeConnectedBlocks(targetColumn?: number) {
+//   // Clear any existing animation states first
+//   clearAllAnimationStates();
+
+//   const visited = new Set<string>();
+//   const toMerge: { positions: Position[]; base: number }[] = [];
+
+//   for (let c = 0; c < columns; c++) {
+//     for (let r = 0; r < grid[c].length; r++) {
+//       const key = `${c},${r}`;
+//       if (visited.has(key)) continue;
+//       const connected = findConnectedBlocks(c, r);
+//       connected.forEach((p) => visited.add(`${p.col},${p.row}`));
+//       if (connected.length >= 2) {
+//         toMerge.push({ positions: connected, base: grid[c][r].value });
+//       }
+//     }
+//   }
+
+//   if (toMerge.length === 0) {
+//     return;
+//   }
+
+//   // Apply liquid merge effects
+//   for (const group of toMerge) {
+//     // Apply liquid animations ONLY to blocks involved in merging
+//     group.positions.forEach((pos, index) => {
+//       const block = grid[pos.col][pos.row];
+//       if (block) {
+//         if (index === 0) {
+//           // First block becomes the main merging block
+//           block.liquidMerging = true;
+//         } else {
+//           // Other blocks get absorbed
+//           block.liquidAbsorbing = true;
+//         }
+//       }
+//     });
+
+//     const k = group.positions.length;
+//     const newValue = group.base * Math.pow(2, k - 1);
+//     score.value += newValue;
+
+//     // FIXED: Determine where the merged block should be placed
+//     let primaryPosition;
+
+//     if (targetColumn !== undefined) {
+//       // If we have a target column (from initial shot), prefer that column
+//       const targetColumnPositions = group.positions.filter(
+//         (p) => p.col === targetColumn
+//       );
+//       if (targetColumnPositions.length > 0) {
+//         // Use the bottommost position in the target column (highest row index)
+//         primaryPosition = targetColumnPositions.reduce((bottom, current) => {
+//           return current.row > bottom.row ? current : bottom;
+//         });
+//       } else {
+//         // Fallback: use the bottommost position overall
+//         primaryPosition = group.positions.reduce((bottom, current) => {
+//           return current.row > bottom.row ? current : bottom;
+//         });
+//       }
+//     } else {
+//       // For chain reactions, use the bottommost position overall
+//       primaryPosition = group.positions.reduce((bottom, current) => {
+//         return current.row > bottom.row ? current : bottom;
+//       });
+//     }
+
+//     await addMergeIndicator(primaryPosition.col, primaryPosition.row, newValue);
+
+//     // Wait for liquid animation to play
+//     await new Promise((resolve) => setTimeout(resolve, 400));
+
+//     // Remove merged blocks after animation (sort by row descending to avoid index issues)
+//     group.positions
+//       .slice()
+//       .sort((a, b) => b.row - a.row)
+//       .forEach((p) => {
+//         if (grid[p.col] && grid[p.col][p.row]) {
+//           // Clear animation states before removing
+//           const block = grid[p.col][p.row];
+//           block.liquidMerging = false;
+//           block.liquidAbsorbing = false;
+//           block.liquidStretching = false;
+//           grid[p.col].splice(p.row, 1);
+//         }
+//       });
+
+//     // Add new block at the PRIMARY merge position
+//     // Since we removed blocks, we need to recalculate the position
+//     // The new block should go at the bottom of the primary column
+//     const newBlock = createBlock(newValue);
+//     tryUpdateHighestTile(newBlock.value);
+//     grid[primaryPosition.col].push(newBlock);
+//   }
+
+//   // Wait for animations to complete before checking for more merges
+//   await new Promise((resolve) => setTimeout(resolve, 600));
+
+//   // Recurse until no more merges (pass targetColumn for first level, undefined for chain reactions)
+//   await nextTick();
+//   await mergeConnectedBlocks(); // Chain reactions don't have a preferred target column
+// }
+
+// // Updated shootBlock function
+
+// async function mergeConnectedBlocks(targetColumn?: number) {
+//   // Clear any existing animation states first
+//   clearAllAnimationStates();
+//   // visited: keeps track of already-checked cells so you don’t duplicate groups.
+//   const visited = new Set<string>();
+//   // Array of groups to merge, each with their positions and base value.
+//   const toMerge: { positions: Position[]; base: number }[] = [];
+
+//   // loop through each column
+//   for (let c = 0; c < columns; c++) {
+//     // check the rows
+//     for (let r = 0; r < grid[c].length; r++) {
+//       const key = `${c},${r}`;
+//       if (visited.has(key)) continue;
+//       // find all connected blocks of the same value
+//       const connected = findConnectedBlocks(c, r);
+//       // mark them as visited
+//       connected.forEach((p) => visited.add(`${p.col},${p.row}`));
+//       // if there are 2 or more connected blocks, add to merge list
+//       if (connected.length >= 2) {
+//         toMerge.push({ positions: connected, base: grid[c][r].value });
+//       }
+//     }
+//   }
+
+//   if (toMerge.length === 0) {
+//     return;
+//   }
+
+//   // Apply liquid merge effects
+//   for (const group of toMerge) {
+//     // Apply liquid animations ONLY to blocks involved in merging
+//     group.positions.forEach((pos, index) => {
+//       const block = grid[pos.col][pos.row];
+//       if (block) {
+//         if (index === 0) {
+//           // First block becomes the main merging block
+//           block.liquidMerging = true;
+//         } else {
+//           // Other blocks get absorbed
+//           block.liquidAbsorbing = true;
+//         }
+//       }
+//     });
+
+//     // group size of array of positions
+//     const k = group.positions.length;
+//     // FIXED: Correct merge calculation - each merge doubles the value
+//     const newValue = group.base * Math.pow(2, k - 1);
+//     score.value += newValue;
+
+//     // FIXED: Determine merge position - follow gravity rules
+//     let primaryPosition;
+
+//     if (targetColumn !== undefined) {
+//       // Always place the merge result in the target column at the bottom
+//       primaryPosition = {
+//         col: targetColumn,
+//         row: grid[targetColumn].length, // bottom row (after gravity)
+//       };
+//     } else {
+//       // For chain reactions, just pick one column involved (e.g. leftmost or first one)
+//       const availableCols = group.positions.map((p) => p.col);
+//       const chosenCol = Math.min(...availableCols); // pick leftmost, or use another rule
+//       primaryPosition = {
+//         col: chosenCol,
+//         row: grid[chosenCol].length,
+//       };
+//     }
+
+//     await addMergeIndicator(primaryPosition.col, primaryPosition.row, newValue);
+
+//     // Wait for liquid animation to play
+//     await new Promise((resolve) => setTimeout(resolve, 400));
+
+//     // Remove merged blocks after animation (sort by row descending to avoid index issues)
+//     const sortedPositions = group.positions.slice().sort((a, b) => {
+//       if (a.col !== b.col) return b.col - a.col; // Remove from rightmost column first
+//       return b.row - a.row; // Then from bottom to top
+//     });
+
+//     sortedPositions.forEach((p) => {
+//       if (grid[p.col] && grid[p.col][p.row]) {
+//         // Clear animation states before removing
+//         const block = grid[p.col][p.row];
+//         block.liquidMerging = false;
+//         block.liquidAbsorbing = false;
+//         block.liquidStretching = false;
+//         grid[p.col].splice(p.row, 1);
+//       }
+//     });
+
+//     // FIXED: Add new block at the bottom of the primary column (gravity effect)
+//     const newBlock = createBlock(newValue);
+//     tryUpdateHighestTile(newBlock.value);
+//     grid[primaryPosition.col].push(newBlock); // This adds to bottom due to array structure
+//   }
+
+//   // Wait for animations to complete before checking for more merges
+//   await new Promise((resolve) => setTimeout(resolve, 600));
+
+//   // Recurse until no more merges (pass targetColumn for first level, undefined for chain reactions)
+//   await nextTick();
+//   await mergeConnectedBlocks(); // Chain reactions don't have a preferred target column
+// }
 
 // --- Merge Helpers ---
+// ? Why Position[]?
+// Because we need to return an array of positions of connected blocks
 function findConnectedBlocks(col: number, row: number): Position[] {
+  // start with the position of the block we are checking
   const start = grid[col][row];
   if (!start) return [];
   const visited = new Set<string>();
@@ -1178,129 +1416,6 @@ function findConnectedBlocks(col: number, row: number): Position[] {
   return out;
 }
 
-// --- Enhanced Liquid Merge Algorithm ---
-function clearAllAnimationStates() {
-  for (let c = 0; c < columns; c++) {
-    for (let r = 0; r < grid[c].length; r++) {
-      if (grid[c][r]) {
-        grid[c][r].liquidMerging = false;
-        grid[c][r].liquidAbsorbing = false;
-        grid[c][r].liquidStretching = false;
-      }
-    }
-  }
-}
-
-async function mergeConnectedBlocks(targetColumn?: number) {
-  // Clear any existing animation states first
-  clearAllAnimationStates();
-
-  const visited = new Set<string>();
-  const toMerge: { positions: Position[]; base: number }[] = [];
-
-  for (let c = 0; c < columns; c++) {
-    for (let r = 0; r < grid[c].length; r++) {
-      const key = `${c},${r}`;
-      if (visited.has(key)) continue;
-      const connected = findConnectedBlocks(c, r);
-      connected.forEach((p) => visited.add(`${p.col},${p.row}`));
-      if (connected.length >= 2) {
-        toMerge.push({ positions: connected, base: grid[c][r].value });
-      }
-    }
-  }
-
-  if (toMerge.length === 0) {
-    return;
-  }
-
-  // Apply liquid merge effects
-  for (const group of toMerge) {
-    // Create liquid connections between merging blocks
-    for (let i = 0; i < group.positions.length - 1; i++) {
-      await createLiquidConnection(group.positions[i], group.positions[i + 1]);
-    }
-
-    // Apply liquid animations ONLY to blocks involved in merging
-    group.positions.forEach((pos, index) => {
-      const block = grid[pos.col][pos.row];
-      if (block) {
-        if (index === 0) {
-          // First block becomes the main merging block
-          block.liquidMerging = true;
-        } else {
-          // Other blocks get absorbed
-          block.liquidAbsorbing = true;
-        }
-      }
-    });
-
-    const k = group.positions.length;
-    const newValue = group.base * Math.pow(2, k - 1);
-    score.value += newValue;
-
-    // FIXED: Determine where the merged block should be placed
-    let primaryPosition;
-
-    if (targetColumn !== undefined) {
-      // If we have a target column (from initial shot), prefer that column
-      const targetColumnPositions = group.positions.filter(
-        (p) => p.col === targetColumn
-      );
-      if (targetColumnPositions.length > 0) {
-        // Use the bottommost position in the target column (highest row index)
-        primaryPosition = targetColumnPositions.reduce((bottom, current) => {
-          return current.row > bottom.row ? current : bottom;
-        });
-      } else {
-        // Fallback: use the bottommost position overall
-        primaryPosition = group.positions.reduce((bottom, current) => {
-          return current.row > bottom.row ? current : bottom;
-        });
-      }
-    } else {
-      // For chain reactions, use the bottommost position overall
-      primaryPosition = group.positions.reduce((bottom, current) => {
-        return current.row > bottom.row ? current : bottom;
-      });
-    }
-
-    await addMergeIndicator(primaryPosition.col, primaryPosition.row, newValue);
-
-    // Wait for liquid animation to play
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    // Remove merged blocks after animation (sort by row descending to avoid index issues)
-    group.positions
-      .slice()
-      .sort((a, b) => b.row - a.row)
-      .forEach((p) => {
-        if (grid[p.col] && grid[p.col][p.row]) {
-          // Clear animation states before removing
-          const block = grid[p.col][p.row];
-          block.liquidMerging = false;
-          block.liquidAbsorbing = false;
-          block.liquidStretching = false;
-          grid[p.col].splice(p.row, 1);
-        }
-      });
-
-    // Add new block at the PRIMARY merge position
-    // Since we removed blocks, we need to recalculate the position
-    // The new block should go at the bottom of the primary column
-    const newBlock = createBlock(newValue);
-    grid[primaryPosition.col].push(newBlock);
-  }
-
-  // Wait for animations to complete before checking for more merges
-  await new Promise((resolve) => setTimeout(resolve, 600));
-
-  // Recurse until no more merges (pass targetColumn for first level, undefined for chain reactions)
-  await nextTick();
-  await mergeConnectedBlocks(); // Chain reactions don't have a preferred target column
-}
-
-// Updated shootBlock function
 async function shootBlock(columnIndex: number) {
   if (isColumnFull(columnIndex) || gameOver.value) {
     if (gameOver.value) return;
@@ -1322,4 +1437,170 @@ async function shootBlock(columnIndex: number) {
     updateBestScore();
   }
 }
+async function mergeConnectedBlocks(targetColumn?: number) {
+  // Reset visual state
+  clearAllAnimationStates();
+
+  // We'll treat the first loop specially if we have a shot column
+  // this is first merge after shooting a block
+  // if targetColumn is defined, it's the column where the block was shot
+  let isFirstMerge = targetColumn !== undefined;
+
+  // target column is the col where the block was shot
+  // shotPos helps prioritize merges involving the shot block
+  // if this is the first merge after shooting
+  // then we note the position of the shot block
+  // else undefined
+  const shotPos = isFirstMerge
+    ? { col: targetColumn!, row: grid[targetColumn!].length - 1 }
+    : undefined;
+
+  // Process merges one-by-one until there are none left
+  while (true) {
+    // Build list of current merge groups (connected components with length >= 2)
+    const visited = new Set<string>();
+    // array of groups to merge, each with their positions, base value, and max row for prioritization
+    const groups: {
+      positions: Position[];
+      base: number;
+      maxRow: number;
+    }[] = [];
+
+    for (let c = 0; c < columns; c++) {
+      for (let r = 0; r < grid[c].length; r++) {
+        const key = `${c},${r}`;
+        if (visited.has(key)) continue;
+        const connected = findConnectedBlocks(c, r);
+        connected.forEach((p) => visited.add(`${p.col},${p.row}`));
+        if (connected.length >= 2) {
+          const base = grid[c][r].value;
+          const maxRow = Math.max(...connected.map((p) => p.row));
+          groups.push({ positions: connected, base, maxRow });
+        }
+      }
+    }
+
+    // Nothing to merge -> exit
+    if (groups.length === 0) break;
+
+    // Choose ONE group to process now (step-by-step)
+    // Priority: first merge -> group that contains the shot block (if any)
+    // Fallback: pick the bottom-most group (highest maxRow), deterministic tie-breaker included
+    let groupToProcess = null as (typeof groups)[number] | null;
+
+    if (isFirstMerge && shotPos) {
+      groupToProcess =
+        groups.find((g) =>
+          g.positions.some(
+            (p) => p.col === shotPos.col && p.row === shotPos.row
+          )
+        ) ?? null;
+    }
+
+    if (!groupToProcess) {
+      groups.sort((a, b) => {
+        if (b.maxRow !== a.maxRow) return b.maxRow - a.maxRow; // bottom-most first
+        // tie-breaker: choose group with smaller leftmost column (deterministic)
+        const leftA = Math.min(...a.positions.map((p) => p.col));
+        const leftB = Math.min(...b.positions.map((p) => p.col));
+        return leftA - leftB;
+      });
+      groupToProcess = groups[0];
+    }
+
+    // SAFETY: if we somehow didn't get a group, bail out
+    if (!groupToProcess) break;
+
+    // Apply visual flags to the involved blocks
+    groupToProcess.positions.forEach((pos, index) => {
+      const block = grid[pos.col][pos.row];
+      if (!block) return;
+      block.liquidMerging = index === 0;
+      block.liquidAbsorbing = index !== 0;
+    });
+
+    // Compute merged value & award score
+    const k = groupToProcess.positions.length;
+    const newValue = groupToProcess.base * Math.pow(2, k - 1);
+    score.value += newValue;
+
+    // Determine which column the merged block should fall into:
+    // Rule: If shot column has blocks in this merge (even in chain reactions), use shot column
+    // Otherwise, the falling block (topmost/highest row) absorbs → merged block at falling block position
+    let primaryCol: number;
+    let mergeRow: number;
+
+    // Check if any block in the shot column is part of this merge
+    const shotColInMerge =
+      targetColumn !== undefined &&
+      groupToProcess.positions.some((p) => p.col === targetColumn);
+
+    if (shotColInMerge) {
+      // Merge involves shot column: merged block stays in shot column
+      primaryCol = targetColumn!;
+      // Find the topmost block in the shot column that's part of the merge
+      const shotColBlocks = groupToProcess.positions.filter(
+        (p) => p.col === targetColumn
+      );
+      mergeRow = Math.min(...shotColBlocks.map((p) => p.row));
+    } else {
+      // Falling block absorbs: find the topmost block (lowest row index = highest position)
+      const fallingBlock = groupToProcess.positions.reduce((top, cur) =>
+        cur.row < top.row ? cur : top
+      );
+      primaryCol = fallingBlock.col;
+      mergeRow = fallingBlock.row;
+    }
+
+    // Show merge indicator near the position where merge occurs
+    await addMergeIndicator(primaryCol, mergeRow, newValue);
+
+    // Wait for liquid animation to play
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    // Remove merged blocks safely:
+    // Sort descending: remove larger row first within the same column to maintain indices
+    const sortedPositions = groupToProcess.positions.slice().sort((a, b) => {
+      if (a.col !== b.col) return b.col - a.col;
+      return b.row - a.row;
+    });
+
+    // Track how many blocks we removed below mergeRow in primaryCol
+    let removedBelowMerge = 0;
+    for (const p of sortedPositions) {
+      if (grid[p.col] && grid[p.col][p.row]) {
+        const blk = grid[p.col][p.row];
+        blk.liquidMerging = false;
+        blk.liquidAbsorbing = false;
+        blk.liquidStretching = false;
+
+        // Track removals in primary column below merge position
+        if (p.col === primaryCol && p.row < mergeRow) {
+          removedBelowMerge++;
+        }
+
+        grid[p.col].splice(p.row, 1);
+      }
+    }
+
+    // Adjust merge row position after removals
+    const adjustedMergeRow = mergeRow - removedBelowMerge;
+
+    // Create merged block and insert it at the correct position
+    const newBlock = createBlock(newValue);
+    tryUpdateHighestTile(newBlock.value);
+    grid[primaryCol].splice(adjustedMergeRow, 0, newBlock); // Insert at lowest merge position
+
+    // After first processed merge, no longer prioritize shot column
+    isFirstMerge = false;
+
+    // Small animation wait and allow DOM to update before next iteration
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await nextTick();
+
+    // Loop continues and re-evaluates grid for further merges (chain reactions)
+  } // end while
+}
+
+
 </script>
