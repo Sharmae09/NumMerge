@@ -4,7 +4,8 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   target: "static",
   ssr: false,
-  css: ["@ionic/vue/css/core.css"],
+  css: ["@ionic/vue/css/core.css", "@/assets/styles.css"],
+  // "@/assets/styles/settings.scss"
   modules: ["@nuxtjs/tailwindcss"],
   // tailwindcss: {
   //   exposeConfig: true,

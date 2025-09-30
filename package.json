@@ -12,9 +12,10 @@
   "dependencies": {
     "@capacitor-community/sqlite": "^7.0.0",
     "@capacitor/android": "^7.0.1",
+    "@capacitor/app": "^7.1.0",
     "@capacitor/cli": "^7.0.1",
     "@capacitor/core": "^7.0.1",
-    "@capacitor/preferences": "^6.0.3",
+    "@capacitor/preferences": "^7.0.2",
     "@ionic/core": "^8.4.3",
     "@ionic/vue": "^8.7.4",
     "@ionic/vue-router": "^8.7.4",
