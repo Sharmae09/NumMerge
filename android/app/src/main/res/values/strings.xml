@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Fer</string>
-    <string name="title_activity_main">Fer</string>
-    <string name="package_name">com.fer.com</string>
-    <string name="custom_url_scheme">com.fer.com</string>
+    <string name="app_name">NumMerge</string>
+    <string name="title_activity_main">NumMerge</string>
+    <string name="package_name">com.nummerge.com</string>
+    <string name="custom_url_scheme">com.nummerge.com</string>
 </resources>

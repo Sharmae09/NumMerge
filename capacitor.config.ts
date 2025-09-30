@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.simplycalculator.com",
-  appName: "Simply Calculator",
+  appId: "com.nummerge.com",
+  appName: "NumMerge",
   webDir: "./.output/public",
 };
 

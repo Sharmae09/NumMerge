@@ -1,4 +1,4 @@
-package com.fer.com;
+package com.nummerge.com;
 
 import com.getcapacitor.BridgeActivity;
 
