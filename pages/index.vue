@@ -4,13 +4,13 @@
       <div class="flex flex-col">
         <div class="status-item">
           <div class="gem-icon">💎</div>
-          <span class="text-white">{{ gems }}</span>
+          <span class="text-white">{{ displayNum(gems) }}</span>
           <div class="add-btn">+</div>
         </div>
       </div>
       <div class="status-item">
         <div class="crown-icon">👑</div>
-        <span class="text-white"> {{ bestScore }}</span>
+        <span class="text-white"> {{ displayNum(bestScore) }}</span>
       </div>
     </div>
     <div class="">
@@ -23,7 +23,9 @@
       <div class="block-display">
         <div class="highest-block">
           <div class="large-next-block num-block" :class="`block-${bestBlock}`">
-            <span class="block-number large-number">{{ bestBlock }}</span>
+            <span class="block-number large-number">{{
+              displayNum(bestBlock)
+            }}</span>
           </div>
           <h2 class="">HIGHEST BLOCK</h2>
         </div>

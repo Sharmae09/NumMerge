@@ -22,6 +22,7 @@
 }
 
 .status-item {
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   background: rgba(255, 255, 255, 0.1);
@@ -39,7 +40,7 @@
 
 .gem-icon,
 .crown-icon {
-  font-size: 18px;
+  font-size: 1rem;
 }
 
 .add-btn {
@@ -102,12 +103,35 @@
   width: 60px;
   height: 60px;
   border-radius: 20%;
+  font-size: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   left: 50%;
   transform: translateX(-50%);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4),
+    inset 0 2px 10px rgba(255, 255, 255, 0.1);
+  animation: dropIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: visible;
+  transition: all 0.2s ease;
+}
+.large-next-block-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+/* class="large-next-block number-block" */
+.large-next-block {
+  width: 60px;
+  height: 60px;
+  border-radius: 20%;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4),
     inset 0 2px 10px rgba(255, 255, 255, 0.1);
   animation: dropIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -235,7 +259,7 @@
 }
 
 .block-number {
-  font-size: 16px;
+  font-size: 2rem;
   font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   z-index: 10;
@@ -250,9 +274,9 @@
 .block-0 {
   background: radial-gradient(
     ellipse at 30% 30%,
-    #a8e063 0%,
-    /* light lime green */ #56ab2f 50%,
-    /* medium green */ #2e7d32 100% /* deep forest green */
+    #e0e0e0 0%,
+    /* light gray */ #9e9e9e 50%,
+    /* medium gray */ #424242 100% /* dark gray */
   );
   color: white;
 }
@@ -374,6 +398,12 @@
   border: 3px solid rgba(255, 255, 255, 0.3);
   animation: glow 2s ease-in-out infinite alternate;
 }
+.bottom-btn {
+  padding: 0;
+  justify-self: end;
+  position: absolute;
+  right: 0;
+}
 
 /* Power-ups Section */
 .powerups-section {
@@ -429,7 +459,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(135deg, #20263f 0%, #490c86 100%);
+  background: linear-gradient(135deg, #000622 0%, #130123 100%);
   color: white;
 }
 
@@ -713,7 +743,7 @@
   }
 
   .level-display {
-    font-size: 36px;
+    font-size: 1.4rem;
   }
 
   .game-column {
@@ -737,4 +767,30 @@
   .large-number {
     font-size: 28px !important;
   }
+}
+ion-list {
+  --background: transparent !important;
+  background-color: #ffffff00 !important;
+  color: white !important;
+}
+ion-item {
+  --background: transparent !important;
+  background-color: #ffffff00 !important;
+  color: white !important;
+}
+/* Game Over Modal */
+.menu-over-modal {
+  padding: 40px;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(135deg, #150165 0%, #230041 100%);
+  color: white;
+  border-radius: 16px;
+}
+ion-modal {
+  --background: transparent !important;
+  background-color: #ffffff00 !important;
 }
