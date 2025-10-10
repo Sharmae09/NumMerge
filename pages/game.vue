@@ -123,7 +123,7 @@
               },
             ]"
             :style="{
-              top: `calc(${blockIndex * 9}vh + 8px)`,
+              top: `calc(${blockIndex * 9}vh + 1.2vh)`,
             }"
             @click="onColumnClick(colIndex)"
             @click.stop="onBlockClick(colIndex, blockIndex)"

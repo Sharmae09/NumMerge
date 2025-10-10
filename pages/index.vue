@@ -1,8 +1,8 @@
 <template>
   <ion-content class="home-content">
-    <ion-modal :is-open="true">
+    <!-- <ion-modal :is-open="true">
       <TestModal />
-    </ion-modal>
+    </ion-modal> -->
 
     <div class="status-bar">
       <div class="flex flex-col">
@@ -26,10 +26,8 @@
 
       <div class="block-display">
         <div class="highest-block">
-          <div class="large-next-block num-block" :class="`block-${bestBlock}`">
-            <span class="block-number large-number">{{
-              displayNum(bestBlock)
-            }}</span>
+          <div class="num-block" :class="`block-${bestBlock}`">
+            {{ displayNum(bestBlock) }}
           </div>
           <h2 class="">HIGHEST BLOCK</h2>
         </div>
@@ -83,18 +81,17 @@ import { play, settings } from "ionicons/icons";
   /* background: rgb(0, 181, 82); */
 }
 .num-block {
-  width: 60px;
-  height: 60px;
+  width: calc(4rem + 6vw);
+  height: calc(4rem + 6vw);
   border-radius: 20%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  font-size: calc(1.5rem + 2vw);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4),
     inset 0 2px 10px rgba(255, 255, 255, 0.1);
-  animation: dropIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  overflow: visible;
-  transition: all 0.3s ease;
+  animation: glow 2s ease-in-out infinite alternate;
 }
 .highest-block {
   display: flex;
@@ -110,9 +107,7 @@ import { play, settings } from "ionicons/icons";
   height: 50px;
   width: 50px;
 }
-/* .home-content {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-} */
+
 .status-bar {
   /* backface-visibility: hidden !important; */
   background: rgba(255, 255, 255, 0) !important;
