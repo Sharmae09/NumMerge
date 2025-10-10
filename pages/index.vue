@@ -1,5 +1,9 @@
 <template>
   <ion-content class="home-content">
+    <ion-modal :is-open="true">
+      <TestModal />
+    </ion-modal>
+
     <div class="status-bar">
       <div class="flex flex-col">
         <div class="status-item">

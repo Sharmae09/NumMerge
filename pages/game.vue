@@ -1,263 +1,282 @@
 <template>
-  <div class="overflow-hidden">
-    <ion-content class="game-content">
-      <!-- Game Over Modal -->
-      <ion-modal :isOpen="isMenu" @didDismiss="isMenu = false">
-        <ion-card class="menu-over-modal">
-          <h2>PAUSED</h2>
-          <ion-list>
-            <ion-item>
-              <ion-toggle
-                :checked="isVibration"
-                @ionChange="onToggleVibration"
-                :enable-on-off-labels="true"
-                >SOUND</ion-toggle
-              >
-            </ion-item>
-            <ion-item>
-              <ion-toggle :enable-on-off-labels="true">VIBRATION</ion-toggle>
-            </ion-item>
-          </ion-list>
-          <!-- <ion-button @click="resetGame" expand="block">Play Again</ion-button> -->
+  <ion-content class="game-content overflow-hidden">
+    <!-- ~ GAME OVER MODAL -->
+    <ion-modal :isOpen="isMenu" @didDismiss="isMenu = false">
+      <ion-card class="menu-over-modal">
+        <h2>PAUSED</h2>
+        <ion-list>
+          <ion-item>
+            <ion-icon color="white" slot="start" name="volume-high-outline" />
+
+            <ion-toggle
+              color="success"
+              :checked="isVibration"
+              @ionChange="onToggleVibration"
+              >SOUND</ion-toggle
+            >
+          </ion-item>
+          <ion-item>
+            <ion-icon color="white" slot="start" name="vibration-outline" />
+
+            <ion-toggle color="success">VIBRATION</ion-toggle>
+          </ion-item>
+        </ion-list>
+        <div class="buttons">
           <ion-button
+            expand="block"
+            shape="round"
+            color="success"
             @click="isMenu = false"
-            class="play-button"
-            shape="round"
-            size="large"
-            expand="block"
           >
-            CONTINUE
+            Continue
           </ion-button>
-          <ion-button
-            @click="resetGame"
-            class="play-button"
-            shape="round"
-            size="large"
-            expand="block"
-          >
-            RESTART
-          </ion-button>
-          <ion-button
-            @click="router.push('/')"
-            class="play-button"
-            shape="round"
-            size="large"
-            expand="block"
-          >
-            HOME
-          </ion-button>
-        </ion-card>
-      </ion-modal>
-      <!-- Menu Over Modal -->
-      <ion-modal :isOpen="gameOver" @didDismiss="gameOver = false">
-        <div class="game-over-modal">
-          <h2>Game Over!</h2>
-          <p>Final Score: {{ score }}</p>
-          <p>Best Score: {{ bestScore }}</p>
-          <!-- <ion-button @click="resetGame" expand="block">Play Again</ion-button> -->
-          <ion-button
-            @click="resetGame"
-            class="play-button"
-            shape="round"
-            size="large"
-            expand="block"
-          >
-            <ion-icon color="light" slot="end" :icon="play"></ion-icon>
-            PLAY AGAIN
-          </ion-button>
-        </div>
-      </ion-modal>
 
-      <!-- Top Status Bar -->
-      <div class="status-bar">
-        <div class="flex flex-col">
-          <div class="status-item">
-            <div class="gem-icon">💎</div>
-            <span class="text-white">{{ displayNum(gems) }}</span>
-            <div class="add-btn">+</div>
-          </div>
-        </div>
-        <div class="flex flex-col items-center justify-center">
-          <div class="level-display text-center text-white">
-            {{ displayNum(score) }}
-          </div>
-        </div>
-        <div class="flex flex-col">
-          <div class="status-item">
-            <div class="crown-icon">👑</div>
-            <span class="text-white"> {{ displayNum(bestScore) }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Game Grid -->
-      <ion-grid class="game-area">
-        <ion-row class="grid-container">
-          <ion-col
-            v-for="(column, colIndex) in grid"
-            :key="colIndex"
-            class="game-column"
-            :class="{
-              'column-full': isColumnFull(colIndex),
-              'column-danger': column.length >= maxHeight - 1,
-            }"
-            @click="onColumnClick(colIndex)"
-          >
-            <!-- Blocks in column (positioned from top) -->
-            <ion-row
-              v-for="(block, blockIndex) in column"
-              :key="block.id"
-              class="number-block"
-              :class="[
-                `block-${block.value}`,
-                {
-                  'liquid-merging': block.liquidMerging,
-                  'liquid-absorbing': block.liquidAbsorbing,
-                  'liquid-stretching': block.liquidStretching,
-                  'block-selectable': activePowerUp !== null,
-                  'block-selected': isBlockSelected(colIndex, blockIndex),
-                },
-              ]"
-              :style="{
-                top: `${blockIndex * 60 + 12}px`,
-              }"
-              @click="onColumnClick(colIndex)"
-              @click.stop="onBlockClick(colIndex, blockIndex)"
-            >
-              <span class="block-number">{{ displayNum(block.value) }}</span>
-
-              <!-- Selection indicator -->
-              <div
-                v-if="isBlockSelected(colIndex, blockIndex)"
-                class="selection-indicator"
-              >
-                1
-              </div>
-
-              <!-- Liquid merge effect blobs -->
-              <div v-if="block.liquidMerging" class="liquid-blobs">
-                <div class="liquid-blob liquid-blob-1"></div>
-                <div class="liquid-blob liquid-blob-2"></div>
-                <div class="liquid-blob liquid-blob-3"></div>
-              </div>
-
-              <!-- Connection streams for liquid effect -->
-              <div v-if="block.liquidStretching" class="liquid-streams">
-                <div class="liquid-stream stream-1"></div>
-                <div class="liquid-stream stream-2"></div>
-              </div>
-            </ion-row>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-
-      <!-- Bottom Section -->
-      <div class="bottom-section">
-        <!-- Active Power-up Indicator -->
-        <div v-if="activePowerUp" class="active-powerup-banner">
-          <span v-if="activePowerUp === 'hammer'"
-            >🔨 Hammer Mode - Click a block to destroy it</span
-          >
-
-          <span v-if="activePowerUp === 'swap'">
-            <h1>Swap Mode!</h1>
-            Swap any two blocks. <br />
-            {{
-              swapSelection.first ? "Select second block" : "Select first block"
-            }}
-          </span>
-          <button @click="cancelPowerUp" class="cancel-btn">✕</button>
-        </div>
-        <div v-else class="default-bottom-bar">
-          <!-- Large Next Block Display -->
-
-          <div class="large-next-block-container">
-            <div class="large-next-block" :class="`block-${nextBlock}`">
-              <span class="large-block-number large-number">{{
-                displayNum(nextBlock)
-              }}</span>
-            </div>
+          <div class="secondary-buttons">
             <ion-button
-              @click="isMenu = true"
-              class="bottom-btn"
-              size="large"
-              color="dark"
+              fill="solid"
+              color="medium"
+              shape="round"
+              @click="resetGame"
             >
-              <ion-icon
-                slot="icon-only"
-                size="large"
-                :icon="settings"
-              ></ion-icon>
+              Restart
+            </ion-button>
+            <ion-button
+              fill="solid"
+              color="medium"
+              shape="round"
+              @click="router.push('/')"
+            >
+              Home
             </ion-button>
           </div>
-
-          <!-- Power-ups Section -->
-          <div class="powerups-section">
-            <div
-              class="powerup-item"
-              :class="{ 'powerup-disabled': gems < powerUpCosts.undo }"
-              @click="activateUndo"
-            >
-              <div class="powerup-icon">⚡</div>
-              <div class="powerup-count">{{ powerUpCosts.undo }}</div>
-            </div>
-            <div
-              class="powerup-item"
-              :class="{
-                'powerup-active': activePowerUp === 'hammer',
-                'powerup-disabled': gems < powerUpCosts.hammer,
-              }"
-              @click="activatePowerUpMode('hammer')"
-            >
-              <div class="powerup-icon">🔨</div>
-              <div class="powerup-count">{{ powerUpCosts.hammer }}</div>
-            </div>
-
-            <div
-              class="powerup-item"
-              :class="{
-                'powerup-active': activePowerUp === 'swap',
-                'powerup-disabled': gems < powerUpCosts.swap,
-              }"
-              @click="activatePowerUpMode('swap')"
-            >
-              <div class="powerup-icon">🔄</div>
-              <div class="powerup-count">{{ powerUpCosts.swap }}</div>
-            </div>
-          </div>
         </div>
-
-        <!-- Floating merge indicators -->
-        <div
-          v-for="indicator in mergeIndicators"
-          :key="indicator.id"
-          class="merge-indicator"
-          :style="{
-            left: `${indicator.x}px`,
-            top: `${indicator.y}px`,
-            color: indicator.color,
-          }"
+      </ion-card>
+    </ion-modal>
+    <!-- ~ Menu Over Modal -->
+    <ion-modal :isOpen="isGameOver" @didDismiss="isGameOver = false">
+      <div class="game-over-modal">
+        <h2>Game Over!</h2>
+        <p>Final Score: {{ score }}</p>
+        <p>Best Score: {{ bestScore }}</p>
+        <!-- <ion-button @click="resetGame" expand="block">Play Again</ion-button> -->
+        <ion-button
+          @click="resetGame"
+          class="menu-button"
+          shape="round"
+          size="small"
+          expand="full"
         >
-          +{{ indicator.value }}
+          <ion-icon color="light" slot="end" :icon="play"></ion-icon>
+          PLAY AGAIN
+        </ion-button>
+      </div>
+    </ion-modal>
+
+    <!-- ~ Top Status Bar -->
+    <div class="status-bar">
+      <div class="flex flex-col">
+        <div class="status-item">
+          <div class="gem-icon">💎</div>
+          <span class="text-white">{{ displayNum(gems) }}</span>
+          <div class="add-btn">+</div>
         </div>
       </div>
-    </ion-content>
-  </div>
+      <div class="flex flex-col items-center justify-center">
+        <div class="score-display text-center text-white">
+          {{ displayNum(score) }}
+        </div>
+      </div>
+      <div class="flex flex-col">
+        <div class="status-item">
+          <div class="crown-icon">👑</div>
+          <span class="text-white"> {{ displayNum(bestScore) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ~ Game Grid -->
+    <ion-grid class="game-area">
+      <ion-row class="grid-container">
+        <ion-col
+          v-for="(column, colIndex) in grid"
+          :key="colIndex"
+          class="game-column"
+          :class="{
+            'column-fulle': isColumnFull(colIndex),
+            'column-dangerse': column.length >= maxHeight,
+          }"
+          @click="onColumnClick(colIndex)"
+        >
+          <!-- Blocks in column (positioned from top) -->
+          <ion-row
+            v-for="(block, blockIndex) in column"
+            :key="block.id"
+            class="number-block"
+            :class="[
+              `block-${block.value}`,
+              {
+                'liquid-merging': block.liquidMerging,
+                'liquid-absorbing': block.liquidAbsorbing,
+                'liquid-stretching': block.liquidStretching,
+                'block-selectable': activePowerUp !== null,
+                'block-selected': isBlockSelected(colIndex, blockIndex),
+              },
+            ]"
+            :style="{
+              top: `calc(${blockIndex * 9}vh + 8px)`,
+            }"
+            @click="onColumnClick(colIndex)"
+            @click.stop="onBlockClick(colIndex, blockIndex)"
+          >
+            <span class="block-number">{{ displayNum(block.value) }}</span>
+
+            <!-- Selection indicator -->
+            <div
+              v-if="isBlockSelected(colIndex, blockIndex)"
+              class="selection-indicator"
+            >
+              1
+            </div>
+
+            <!-- Liquid merge effect blobs -->
+            <div v-if="block.liquidMerging" class="liquid-blobs">
+              <div class="liquid-blob liquid-blob-1"></div>
+              <div class="liquid-blob liquid-blob-2"></div>
+              <div class="liquid-blob liquid-blob-3"></div>
+            </div>
+
+            <!-- Connection streams for liquid effect -->
+            <div v-if="block.liquidStretching" class="liquid-streams">
+              <div class="liquid-stream stream-1"></div>
+              <div class="liquid-stream stream-2"></div>
+            </div>
+          </ion-row>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <!-- ~ Bottom Section -->
+    <div class="bottom-section">
+      <!-- ~ Active Power-up Indicator -->
+      <div v-if="activePowerUp" class="active-powerup-banner">
+        <span v-if="activePowerUp === 'hammer'"
+          >🔨 Hammer Mode - Click a block to destroy it</span
+        >
+
+        <span v-if="activePowerUp === 'swap'">
+          <h1>Swap Mode!</h1>
+          Swap any two blocks. <br />
+          {{
+            swapSelection.first ? "Select second block" : "Select first block"
+          }}
+        </span>
+        <button @click="cancelPowerUp" class="cancel-btn">✕</button>
+      </div>
+      <div v-else class="default-bottom-bar">
+        <!-- ~ Large Next Block Display -->
+        <div class="large-next-block-container">
+          <div class="large-next-block" :class="`block-${nextBlock}`">
+            <span class="large-block-number large-number">{{
+              displayNum(nextBlock)
+            }}</span>
+          </div>
+          <ion-button
+            @click="isMenu = true"
+            class="bottom-btn"
+            size="large"
+            color="dark"
+          >
+            <ion-icon slot="icon-only" size="large" :icon="settings"></ion-icon>
+          </ion-button>
+        </div>
+        <!-- ~ Power-ups Section -->
+        <div class="powerups-section">
+          <div
+            class="powerup-item"
+            :class="{ 'powerup-disableds': gems < powerUpCosts.undo }"
+            @click="useUndo"
+          >
+            <div class="powerup-icon">
+              <img
+                src="/assets/icons/magnet.png"
+                alt="Laser Line Power-up"
+                class="powerup-icon"
+              />
+            </div>
+            <div class="powerup-count">{{ powerUpCosts.undo }}</div>
+          </div>
+          <div
+            class="powerup-item"
+            :class="{
+              'powerup-active': activePowerUp === 'hammer',
+              'powerup-disabled': gems < powerUpCosts.hammer,
+            }"
+            @click="activatePowerUpMode('hammer')"
+          >
+            <div class="powerup-icon">
+              <img
+                src="/assets/icons/hammer.png"
+                alt="Laser Line Power-up"
+                class="powerup-icon"
+              />
+            </div>
+            <div class="powerup-count">{{ powerUpCosts.hammer }}</div>
+          </div>
+
+          <div
+            class="powerup-item"
+            :class="{
+              'powerup-active': activePowerUp === 'swap',
+              'powerup-disabled': gems < powerUpCosts.swap,
+            }"
+            @click="activatePowerUpMode('swap')"
+          >
+            <div class="powerup-icon">
+              <img
+                src="/assets/icons/swap.png"
+                alt="Laser Line Power-up"
+                class="powerup-icon"
+              />
+            </div>
+            <div class="powerup-count">{{ powerUpCosts.swap }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ~ Floating merge indicators -->
+      <div
+        v-for="indicator in mergeIndicators"
+        :key="indicator.id"
+        class="merge-indicator"
+        :style="{
+          left: `${indicator.x}px`,
+          top: `${indicator.y}px`,
+          color: indicator.color,
+        }"
+      >
+        +{{ indicator.value }}
+      </div>
+    </div>
+  </ion-content>
 </template>
 
 <style scoped>
-.play-button {
-  /* margin-top: 4rem; */
-  font-weight: 700;
-  font-size: 1.5rem;
-  --background: linear-gradient(
-    135deg,
-    #4caf50,
-    #2e7d32
-  ); /* light → dark green */
+.menu-button {
   --color: white;
+  --background: #1c6440;
+  --background-activated: #b9fddfcb;
 
-  /* background: rgb(0, 181, 82); */
+  --border-radius: 1.4rem;
+  --border-color: #ffffff20;
+  --border-style: solid;
+  --width: 10px;
+
+  --box-shadow: 0 2px 6px 0 rgb(0, 0, 0, 0.25);
+
+  --ripple-color: deeppink;
+
+  --padding-top: 0;
+  --padding-bottom: 0;
 }
 .active-powerup-banner {
   position: relative; /* allow absolute children */
@@ -303,18 +322,7 @@
   height: 100%;
 }
 
-/* @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-} */
-
-.cancel-btns {
+.cancel-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
@@ -408,6 +416,8 @@ import { addIcons } from "ionicons";
 import { menuOutline } from "ionicons/icons";
 import { play, settings } from "ionicons/icons";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { IonToggle } from "@ionic/vue";
+import { usePreferences } from "@/composables/usePreferences";
 
 addIcons({
   "menu-outline": menuOutline,
@@ -419,7 +429,6 @@ interface Block {
   liquidAbsorbing?: boolean;
   liquidStretching?: boolean;
 }
-// the numbers that flies up when merging
 interface MergeIndicator {
   id: number;
   value: number;
@@ -438,7 +447,6 @@ interface Position {
   col: number;
   row: number;
 }
-// connects the blocks that need to be merged with a liquid effect
 interface LiquidConnection {
   id: number;
   x1: number;
@@ -448,25 +456,21 @@ interface LiquidConnection {
 }
 
 const columns = 5;
-const maxHeight = 7;
+const maxHeight = 6;
 const grid = reactive<Block[][]>(Array.from({ length: columns }, () => []));
 const score = ref(0);
-const gameOver = ref(false);
+const isGameOver = ref(false);
 const isMenu = ref(false);
 const nextBlock = ref(2);
+const highestTile = ref(2);
 
-import { IonToggle } from "@ionic/vue";
-
-import { usePreferences } from "@/composables/usePreferences";
-const router = useRouter(); // to push/replace routes
-const route = useRoute(); // to access current route info
+const router = useRouter();
 
 const {
   bestScore,
   gems,
   setBestScore,
   setBestBlock,
-  bestBlock,
   isVibration,
   setIsVibration,
 } = usePreferences();
@@ -475,32 +479,36 @@ function onToggleVibration(event: CustomEvent) {
 }
 const mergeIndicators = reactive<MergeIndicator[]>([]);
 const liquidConnections = reactive<LiquidConnection[]>([]);
-const powerUps = reactive<PowerUps>({ hammer: 35, swap: 45, undo: 30 });
-const highestTile = ref(2);
 
-// IDs for indicators and connections
 let indicatorId = 1;
-let connectionId = 1;
-// Fallback counter for UUID generation
 let uuidCounterFallback = 1;
 
 // Power-up state
 const activePowerUp = ref<keyof PowerUps | null>(null);
-const swapSelection = reactive<{ first?: Position; second?: Position }>({});
-
-// --- State for Undo ---
-const history = reactive<
-  { grid: Block[][]; score: number; nextBlock: number }[]
->([]);
-
-// --- Power-up Costs ---
 const powerUpCosts: Record<keyof PowerUps, number> = {
   hammer: 35,
   swap: 45,
   undo: 30,
 };
+const swapSelection = reactive<{ first?: Position; second?: Position }>({});
+const history = reactive<
+  { grid: Block[][]; score: number; nextBlock: number }[]
+>([]);
 
-// --- Utility ---
+function resetGame() {
+  grid.forEach((c) => c.splice(0, c.length));
+  score.value = 0;
+  mergeIndicators.splice(0, mergeIndicators.length);
+  liquidConnections.splice(0, liquidConnections.length);
+  highestTile.value = 2;
+  activePowerUp.value = null;
+  swapSelection.first = undefined;
+  swapSelection.second = undefined;
+  generateNextBlock();
+  isGameOver.value = false;
+  isMenu.value = false;
+}
+
 function generateUUID(): string {
   if (
     typeof crypto !== "undefined" &&
@@ -519,7 +527,6 @@ function tryUpdateHighestTile(value: number) {
   if (value > highestTile.value) highestTile.value = value;
 }
 
-// --- Lifecycle ---
 onMounted(() => {
   if (process.client) {
     const saved = localStorage.getItem("numberMergeBestScore");
@@ -528,7 +535,6 @@ onMounted(() => {
   generateNextBlock();
 });
 
-// --- Weighted Random ---
 function weightedChoice<T>(items: T[], weights: number[]): T {
   const sum = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * sum;
@@ -559,7 +565,6 @@ function generateNextBlock() {
   nextBlock.value = chosen;
 }
 
-// --- Game Logic ---
 function isColumnFull(columnIndex: number) {
   return grid[columnIndex].length >= maxHeight;
 }
@@ -595,20 +600,6 @@ function checkGameOver() {
   return true;
 }
 
-function resetGame() {
-  grid.forEach((c) => c.splice(0, c.length));
-  score.value = 0;
-  mergeIndicators.splice(0, mergeIndicators.length);
-  liquidConnections.splice(0, liquidConnections.length);
-  highestTile.value = 2;
-  activePowerUp.value = null;
-  swapSelection.first = undefined;
-  swapSelection.second = undefined;
-  generateNextBlock();
-  gameOver.value = false;
-  isMenu.value = false;
-}
-
 function updateBestScore() {
   if (score.value > bestScore.value) {
     bestScore.value = score.value;
@@ -618,9 +609,6 @@ function updateBestScore() {
   }
 }
 
-// --- Power-up Functions ---
-
-// Activate power-up mode (doesn't deduct gems yet)
 function activatePowerUpMode(type: "hammer" | "swap") {
   if (gems.value < powerUpCosts[type]) {
     alert("Not enough gems!");
@@ -636,34 +624,12 @@ function activatePowerUpMode(type: "hammer" | "swap") {
   }
 }
 
-// Undo is instant, not a mode
-function activateUndo() {
-  if (gems.value < powerUpCosts.undo) {
-    alert("Not enough gems!");
-    return;
-  }
-
-  if (history.length === 0) {
-    alert("No moves to undo!");
-    return;
-  }
-
-  gems.value -= powerUpCosts.undo;
-  undoMove();
-}
-
 function cancelPowerUp() {
   activePowerUp.value = null;
   swapSelection.first = undefined;
   swapSelection.second = undefined;
 }
 
-function isBlockSelected(col: number, row: number): boolean {
-  if (!swapSelection.first) return false;
-  return swapSelection.first.col === col && swapSelection.first.row === row;
-}
-
-// Save snapshot before each move
 function saveHistory() {
   const snapshot = {
     grid: grid.map((col) => col.map((b) => ({ ...b }))),
@@ -673,7 +639,22 @@ function saveHistory() {
   history.splice(3, history.length, snapshot);
 }
 
-function undoMove() {
+function useUndo() {
+  if (gems.value < powerUpCosts.undo) {
+    alert("Not enough gems!");
+    return;
+  }
+  //   Magnet Merge 🧲
+  // Pulls all matching blocks toward your last shot.
+
+  // “Instant chain reaction.”
+  if (history.length === 0) {
+    alert("No moves to undo!");
+    return;
+  }
+
+  gems.value -= powerUpCosts.undo;
+
   if (history.length === 0) return;
   const last = history.pop()!;
   grid.forEach((col, i) => {
@@ -683,7 +664,6 @@ function undoMove() {
   nextBlock.value = last.nextBlock;
 }
 
-// --- Hammer: remove a block ---
 async function useHammer(col: number, row: number) {
   if (!grid[col] || !grid[col][row]) return;
 
@@ -698,7 +678,11 @@ async function useHammer(col: number, row: number) {
   activePowerUp.value = null;
 }
 
-// --- Swap: swap two blocks ---
+function isBlockSelected(col: number, row: number): boolean {
+  if (!swapSelection.first) return false;
+  return swapSelection.first.col === col && swapSelection.first.row === row;
+}
+
 async function useSwap(c1: number, r1: number, c2: number, r2: number) {
   if (!grid[c1]?.[r1] || !grid[c2]?.[r2]) return;
 
@@ -717,7 +701,6 @@ async function useSwap(c1: number, r1: number, c2: number, r2: number) {
   swapSelection.second = undefined;
 }
 
-// Handle clicks on blocks
 async function onBlockClick(col: number, row: number) {
   if (activePowerUp.value === "hammer") {
     await useHammer(col, row);
@@ -740,7 +723,6 @@ async function onBlockClick(col: number, row: number) {
   }
 }
 
-// Handle clicks on columns (normal shooting)
 function onColumnClick(col: number) {
   // Only shoot if no power-up is active
   if (activePowerUp.value === null) {
@@ -787,7 +769,6 @@ async function addMergeIndicator(col: number, row: number, value: number) {
   }, 1600);
 }
 
-// --- Enhanced Liquid Merge Algorithm ---
 function clearAllAnimationStates() {
   for (let c = 0; c < columns; c++) {
     for (let r = 0; r < grid[c].length; r++) {
@@ -842,25 +823,13 @@ let isOnCooldown = false;
 async function shootBlock(columnIndex: number) {
   saveHistory();
 
-  if (isOnCooldown) return; // ignore extra taps
+  if (isOnCooldown) return;
 
   isOnCooldown = true;
 
-  if (isColumnFull(columnIndex) || gameOver.value) {
+  if (isColumnFull(columnIndex) || isGameOver.value) {
     const lastBlock = grid[columnIndex][maxHeight - 1].value;
-    if (gameOver.value) return;
-    // if (lastBlock == nextBlock.value) {
-    //   // directly merge instead of pushing a duplicate first
-    //   // grid[columnIndex].push(createBlock(nextBlock.value));
-    //   generateNextBlock();
-    //   await mergeConnectedBlocks(columnIndex);
-    //   await nextTick();
-    //   if (checkGameOver()) {
-    //     gameOver.value = true;
-    //     updateBestScore();
-    //   }
-    //   return;
-    // }
+    if (isGameOver.value) return;
     else if (lastBlock != nextBlock.value) {
       return;
     }
@@ -876,7 +845,7 @@ async function shootBlock(columnIndex: number) {
 
   await nextTick();
   if (checkGameOver()) {
-    gameOver.value = true;
+    isGameOver.value = true;
     updateBestScore();
   }
   setTimeout(() => {
