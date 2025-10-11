@@ -52,6 +52,33 @@
         </div>
       </ion-card>
     </ion-modal>
+    <!-- ~ Block reward High -->
+    <ion-modal
+      :isOpen="isHighBlockReward"
+      @didDismiss="isHighBlockReward = false"
+    >
+      <ion-card class="menu-over-modal">
+        <h2>CONGRATULATIONS!</h2>
+        <H3> NEW BLOCK UNLOCKED!</H3>
+        <div
+          class="large-next-block reward-block"
+          :class="`block-${highestTile}`"
+        >
+          <span class="large-block-number large-number">{{
+            displayNum(highestTile)
+          }}</span>
+        </div>
+        <ion-button
+          fill="solid"
+          color="success"
+          shape="round"
+          @click="isHighBlockReward = false"
+          class="reward-btn"
+        >
+          Accept Reward: +{{ rewardGem }} 💎
+        </ion-button>
+      </ion-card>
+    </ion-modal>
     <!-- ~ Menu Over Modal -->
     <ion-modal :isOpen="isGameOver" @didDismiss="isGameOver = false">
       <div class="game-over-modal">
@@ -75,7 +102,7 @@
     <!-- ~ Top Status Bar -->
     <div class="status-bar">
       <div class="flex flex-col">
-        <div class="status-item">
+        <div class="status-item" @click="watchAds()">
           <div class="gem-icon">💎</div>
           <span class="text-white">{{ displayNum(gems) }}</span>
           <div class="add-btn">+</div>
@@ -461,6 +488,7 @@ const grid = reactive<Block[][]>(Array.from({ length: columns }, () => []));
 const score = ref(0);
 const isGameOver = ref(false);
 const isMenu = ref(false);
+const isHighBlockReward = ref(false);
 const nextBlock = ref(2);
 const highestTile = ref(2);
 
@@ -473,6 +501,7 @@ const {
   setBestBlock,
   isVibration,
   setIsVibration,
+  bestBlock,
 } = usePreferences();
 function onToggleVibration(event: CustomEvent) {
   setIsVibration(event.detail.checked);
@@ -523,9 +552,28 @@ function createBlock(value: number): Block {
   return { value, id: generateUUID() };
 }
 
+const rewardGem = ref(0);
+
 function tryUpdateHighestTile(value: number) {
-  if (value > highestTile.value) highestTile.value = value;
+  if (value > highestTile.value) {
+    highestTile.value = value;
+
+    // Update best block if needed
+    if (highestTile.value > bestBlock.value) {
+      setBestBlock(highestTile.value);
+      if (bestBlock.value != 2) {
+        let n = Math.log2(bestBlock.value);
+        rewardGem.value = 50 + n * n;
+        gems.value += rewardGem.value;
+        isHighBlockReward.value = true;
+      }
+    }
+  }
 }
+// function videoAdReward() {
+//   gems.value += 50;
+//   alert("You earned 50 gems!");
+// }
 
 onMounted(() => {
   if (process.client) {
@@ -609,6 +657,11 @@ function updateBestScore() {
   }
 }
 
+function watchAds() {
+  // Simulate watching an ad and reward gems
+  gems.value += 50;
+  alert("You earned 50 gems!");
+}
 function activatePowerUpMode(type: "hammer" | "swap") {
   if (gems.value < powerUpCosts[type]) {
     alert("Not enough gems!");
