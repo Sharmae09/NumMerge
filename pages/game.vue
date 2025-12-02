@@ -1,6 +1,6 @@
 <template>
   <ion-content class="game-content overflow-hidden">
-    <!-- ~ GAME OVER MODAL -->
+    <!-- ~ Menu OVER MODAL -->
     <ion-modal :isOpen="isMenu" @didDismiss="isMenu = false">
       <ion-card class="menu-over-modal">
         <h2>PAUSED</h2>
@@ -10,15 +10,20 @@
 
             <ion-toggle
               color="success"
-              :checked="isVibration"
-              @ionChange="onToggleVibration"
-              >SOUND</ion-toggle
+              :checked="isSound"
+              @ionChange="onToggleSound"
+              >SOUNDs</ion-toggle
             >
           </ion-item>
           <ion-item>
             <ion-icon color="white" slot="start" name="vibration-outline" />
 
-            <ion-toggle color="success">VIBRATION</ion-toggle>
+            <ion-toggle
+              color="success"
+              :checked="isVibration"
+              @ionChange="onToggleVibration"
+              >VIBRATION</ion-toggle
+            >
           </ion-item>
         </ion-list>
         <div class="buttons">
@@ -59,7 +64,7 @@
     >
       <ion-card class="menu-over-modal">
         <h2>CONGRATULATIONS!</h2>
-        <H3> NEW BLOCK UNLOCKED!</H3>
+        <h3>NEW BLOCK UNLOCKED!</h3>
         <div
           class="large-next-block reward-block"
           :class="`block-${highestTile}`"
@@ -72,28 +77,28 @@
           fill="solid"
           color="success"
           shape="round"
-          @click="isHighBlockReward = false"
+          @click="closeBlockReward"
           class="reward-btn"
         >
           Accept Reward: +{{ rewardGem }} 💎
         </ion-button>
       </ion-card>
     </ion-modal>
-    <!-- ~ Menu Over Modal -->
+    <!-- ~ Game Over Modal -->
     <ion-modal :isOpen="isGameOver" @didDismiss="isGameOver = false">
-      <div class="game-over-modal">
+      <div class="menu-over-modal">
         <h2>Game Over!</h2>
-        <p>Final Score: {{ score }}</p>
-        <p>Best Score: {{ bestScore }}</p>
+        <h3>Final Score: {{ score }}</h3>
+        <h3>Best Score: {{ bestScore }}</h3>
         <!-- <ion-button @click="resetGame" expand="block">Play Again</ion-button> -->
         <ion-button
           @click="resetGame"
-          class="menu-button"
+          color="success"
           shape="round"
-          size="small"
+          size="large"
           expand="full"
         >
-          <ion-icon color="light" slot="end" :icon="play"></ion-icon>
+          <ion-icon slot="end" :icon="play"></ion-icon>
           PLAY AGAIN
         </ion-button>
       </div>
@@ -220,17 +225,17 @@
         <div class="powerups-section">
           <div
             class="powerup-item"
-            :class="{ 'powerup-disableds': gems < powerUpCosts.undo }"
+            :class="{ 'powerup-disabled': gems < powerUpCosts.undo }"
             @click="useUndo"
           >
             <div class="powerup-icon">
               <img
-                src="/assets/icons/magnet.png"
+                src="/assets/icons/undo.png"
                 alt="Laser Line Power-up"
                 class="powerup-icon"
               />
             </div>
-            <div class="powerup-count">{{ powerUpCosts.undo }}</div>
+            <div class="powerup-count">💎{{ powerUpCosts.undo }}</div>
           </div>
           <div
             class="powerup-item"
@@ -247,7 +252,7 @@
                 class="powerup-icon"
               />
             </div>
-            <div class="powerup-count">{{ powerUpCosts.hammer }}</div>
+            <div class="powerup-count">💎{{ powerUpCosts.hammer }}</div>
           </div>
 
           <div
@@ -265,7 +270,7 @@
                 class="powerup-icon"
               />
             </div>
-            <div class="powerup-count">{{ powerUpCosts.swap }}</div>
+            <div class="powerup-count">💎{{ powerUpCosts.swap }}</div>
           </div>
         </div>
       </div>
@@ -499,12 +504,32 @@ const {
   gems,
   setBestScore,
   setBestBlock,
+  setGems,
   isVibration,
+  isSound,
   setIsVibration,
+  setIsSound,
   bestBlock,
 } = usePreferences();
-function onToggleVibration(event: CustomEvent) {
-  setIsVibration(event.detail.checked);
+async function onToggleVibration(event: CustomEvent) {
+  const enabled = event.detail.checked;
+  await setIsVibration(enabled);
+
+  // Trigger a short haptic feedback when toggled ON
+  if (enabled) {
+    await Haptics.impact({ style: ImpactStyle.Medium });
+    await Haptics.vibrate();
+  }
+}
+async function onToggleSound(event: CustomEvent) {
+  const enabled = event.detail.checked;
+  await setIsSound(enabled);
+
+  // Trigger a short haptic feedback when toggled ON
+  if (enabled) {
+    await Haptics.impact({ style: ImpactStyle.Medium });
+    await Haptics.vibrate();
+  }
 }
 const mergeIndicators = reactive<MergeIndicator[]>([]);
 const liquidConnections = reactive<LiquidConnection[]>([]);
@@ -564,24 +589,20 @@ function tryUpdateHighestTile(value: number) {
       if (bestBlock.value != 2) {
         let n = Math.log2(bestBlock.value);
         rewardGem.value = 50 + n * n;
-        gems.value += rewardGem.value;
         isHighBlockReward.value = true;
       }
     }
   }
 }
+async function closeBlockReward() {
+  isHighBlockReward.value = false;
+
+  await setGems(gems.value + rewardGem.value);
+}
 // function videoAdReward() {
 //   gems.value += 50;
 //   alert("You earned 50 gems!");
 // }
-
-onMounted(() => {
-  if (process.client) {
-    const saved = localStorage.getItem("numberMergeBestScore");
-    if (saved) bestScore.value = parseInt(saved, 10);
-  }
-  generateNextBlock();
-});
 
 function weightedChoice<T>(items: T[], weights: number[]): T {
   const sum = weights.reduce((a, b) => a + b, 0);
@@ -657,9 +678,10 @@ function updateBestScore() {
   }
 }
 
-function watchAds() {
+async function watchAds() {
   // Simulate watching an ad and reward gems
-  gems.value += 50;
+  await setGems(gems.value + 50);
+
   alert("You earned 50 gems!");
 }
 function activatePowerUpMode(type: "hammer" | "swap") {
@@ -692,7 +714,7 @@ function saveHistory() {
   history.splice(3, history.length, snapshot);
 }
 
-function useUndo() {
+async function useUndo() {
   if (gems.value < powerUpCosts.undo) {
     alert("Not enough gems!");
     return;
@@ -706,7 +728,7 @@ function useUndo() {
     return;
   }
 
-  gems.value -= powerUpCosts.undo;
+  await setGems(gems.value - powerUpCosts.hammer);
 
   if (history.length === 0) return;
   const last = history.pop()!;
@@ -721,7 +743,7 @@ async function useHammer(col: number, row: number) {
   if (!grid[col] || !grid[col][row]) return;
 
   saveHistory();
-  gems.value -= powerUpCosts.hammer;
+  await setGems(gems.value - powerUpCosts.hammer);
 
   grid[col].splice(row, 1);
   await nextTick();
@@ -740,7 +762,7 @@ async function useSwap(c1: number, r1: number, c2: number, r2: number) {
   if (!grid[c1]?.[r1] || !grid[c2]?.[r2]) return;
 
   saveHistory();
-  gems.value -= powerUpCosts.swap;
+  await setGems(gems.value - powerUpCosts.hammer);
 
   const temp = grid[c1][r1];
   grid[c1][r1] = grid[c2][r2];
@@ -880,6 +902,8 @@ async function shootBlock(columnIndex: number) {
 
   isOnCooldown = true;
 
+  await Haptics.impact({ style: ImpactStyle.Medium });
+
   if (isColumnFull(columnIndex) || isGameOver.value) {
     const lastBlock = grid[columnIndex][maxHeight - 1].value;
     if (isGameOver.value) return;
@@ -892,6 +916,7 @@ async function shootBlock(columnIndex: number) {
 
   generateNextBlock();
   if (isVibration.value) {
+    // console.log("Shooting block into column", columnIndex);
     await Haptics.impact({ style: ImpactStyle.Medium });
   }
   await mergeConnectedBlocks(columnIndex);
@@ -908,6 +933,7 @@ async function shootBlock(columnIndex: number) {
 
 async function mergeConnectedBlocks(targetColumn?: number) {
   clearAllAnimationStates();
+  await Haptics.impact({ style: ImpactStyle.Medium });
 
   let isFirstMerge = targetColumn !== undefined;
   const shotPos = isFirstMerge
@@ -1029,5 +1055,58 @@ async function mergeConnectedBlocks(targetColumn?: number) {
     await new Promise((resolve) => setTimeout(resolve, 250));
     await nextTick();
   }
+  // The best score should only update after the game over
+  // if (score.value > bestScore.value) {
+  //   setBestScore(score.value);
+  // }
 }
+
+import { useGameState } from "~/composables/useGameState";
+import { App } from "@capacitor/app";
+import { onUnmounted } from "vue";
+
+// Use your composable
+const {
+  currentScore,
+  grid: savedGrid,
+  gameOver,
+  loadGame,
+  saveGame,
+} = useGameState();
+
+watch(score, (v) => (currentScore.value = v));
+watch(isGameOver, (v) => (gameOver.value = v));
+watch(
+  grid,
+  (v) => {
+    // Deep clone grid to avoid Vue reactivity reference issues
+    savedGrid.value = v.map((col) => col.map((b) => ({ ...b })));
+  },
+  { deep: true }
+);
+
+onMounted(async () => {
+  await loadGame();
+
+  // Restore saved data into your active game
+  if (savedGrid.value.length > 0) {
+    grid.forEach((col, i) => {
+      col.splice(0, col.length, ...(savedGrid.value[i] || []));
+    });
+  }
+  if (currentScore.value > 0) score.value = currentScore.value;
+  isGameOver.value = gameOver.value;
+
+  // Add your app lifecycle listeners as before
+  App.addListener("backButton", saveGame);
+  App.addListener("pause", saveGame);
+  App.addListener("appStateChange", async (state) => {
+    if (!state.isActive) await saveGame();
+  });
+});
+
+onUnmounted(() => {
+  App.removeAllListeners();
+  saveGame();
+});
 </script>

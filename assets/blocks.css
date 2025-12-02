@@ -1,0 +1,402 @@
+/* Block Colors - Enhanced with liquid-friendly gradients */
+.block-0 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #e0e0e0 0%,
+    /* light gray */ #9e9e9e 50%,
+    /* medium gray */ #424242 100% /* dark gray */
+  );
+  color: white;
+}
+
+.block-2 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #4facfe 0%,
+    #3498db 50%,
+    #2980b9 100%
+  );
+  color: white;
+}
+.block-4 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ff9a56 0%,
+    #e67e22 50%,
+    #d35400 100%
+  );
+  color: white;
+}
+.block-8 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ff6b9d 0%,
+    #e91e63 50%,
+    #c2185b 100%
+  );
+  color: white;
+}
+.block-16 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #c471ed 0%,
+    #9c27b0 50%,
+    #7b1fa2 100%
+  );
+  color: white;
+}
+.block-32 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #8b7cf8 0%,
+    #673ab7 50%,
+    #512da8 100%
+  );
+  color: white;
+}
+.block-64 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #667eea 0%,
+    #3f51b5 50%,
+    #303f9f 100%
+  );
+  color: white;
+}
+.block-128 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #5eb3f6 0%,
+    #2196f3 50%,
+    #1976d2 100%
+  );
+  color: white;
+}
+.block-256 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #4dd0e1 0%,
+    #00bcd4 50%,
+    #0097a7 100%
+  );
+  color: white;
+}
+.block-512 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #81c784 0%,
+    #4caf50 50%,
+    #388e3c 100%
+  );
+  color: white;
+}
+.block-1024 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ffb74d 0%,
+    #ff9800 50%,
+    #f57c00 100%
+  );
+  color: white;
+}
+.block-2048 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #e57373 0%,
+    #f44336 50%,
+    #d32f2f 100%
+  );
+  color: white;
+}
+
+/* Continuing Block Gradients Beyond 2048 */
+
+.block-4096 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #f06292 0%,
+    #ec407a 50%,
+    #c2185b 100%
+  );
+  color: white;
+}
+
+.block-8192 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ba68c8 0%,
+    #9c27b0 50%,
+    #6a1b9a 100%
+  );
+  color: white;
+}
+
+.block-16384 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #9575cd 0%,
+    #673ab7 50%,
+    #4527a0 100%
+  );
+  color: white;
+}
+
+.block-32768 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #7986cb 0%,
+    #3f51b5 50%,
+    #283593 100%
+  );
+  color: white;
+}
+
+.block-65536 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #64b5f6 0%,
+    #2196f3 50%,
+    #1565c0 100%
+  );
+  color: white;
+}
+
+.block-131072 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #4dd0e1 0%,
+    #00bcd4 50%,
+    #00838f 100%
+  );
+  color: white;
+}
+
+.block-262144 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #4db6ac 0%,
+    #009688 50%,
+    #00695c 100%
+  );
+  color: white;
+}
+
+.block-524288 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #81c784 0%,
+    #4caf50 50%,
+    #2e7d32 100%
+  );
+  color: white;
+}
+
+.block-1048576 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #aed581 0%,
+    #8bc34a 50%,
+    #558b2f 100%
+  );
+  color: white;
+}
+
+.block-2097152 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #fff176 0%,
+    #ffeb3b 50%,
+    #fbc02d 100%
+  );
+  color: #333;
+}
+
+.block-4194304 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ffd54f 0%,
+    #ffc107 50%,
+    #ffa000 100%
+  );
+  color: #333;
+}
+
+.block-8388608 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ffb74d 0%,
+    #ff9800 50%,
+    #ef6c00 100%
+  );
+  color: white;
+}
+
+.block-16777216 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ff8a65 0%,
+    #ff5722 50%,
+    #e64a19 100%
+  );
+  color: white;
+}
+
+.block-33554432 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #e57373 0%,
+    #f44336 50%,
+    #c62828 100%
+  );
+  color: white;
+}
+
+.block-67108864 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #f48fb1 0%,
+    #e91e63 50%,
+    #ad1457 100%
+  );
+  color: white;
+}
+
+.block-134217728 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ce93d8 0%,
+    #ab47bc 50%,
+    #6a1b9a 100%
+  );
+  color: white;
+}
+
+.block-268435456 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #b39ddb 0%,
+    #7e57c2 50%,
+    #4527a0 100%
+  );
+  color: white;
+}
+
+.block-536870912 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #9fa8da 0%,
+    #5c6bc0 50%,
+    #283593 100%
+  );
+  color: white;
+}
+
+.block-1073741824 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #90caf9 0%,
+    #42a5f5 50%,
+    #1565c0 100%
+  );
+  color: white;
+}
+
+.block-2147483648 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #81d4fa 0%,
+    #29b6f6 50%,
+    #0277bd 100%
+  );
+  color: white;
+}
+
+.block-4294967296 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #80deea 0%,
+    #26c6da 50%,
+    #006064 100%
+  );
+  color: white;
+}
+
+.block-8589934592 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #80cbc4 0%,
+    #26a69a 50%,
+    #004d40 100%
+  );
+  color: white;
+}
+
+.block-17179869184 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #a5d6a7 0%,
+    #66bb6a 50%,
+    #2e7d32 100%
+  );
+  color: white;
+}
+
+.block-34359738368 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #c5e1a5 0%,
+    #9ccc65 50%,
+    #558b2f 100%
+  );
+  color: white;
+}
+
+.block-68719476736 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #dce775 0%,
+    #cddc39 50%,
+    #9e9d24 100%
+  );
+  color: #333;
+}
+
+.block-137438953472 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #fff59d 0%,
+    #ffeb3b 50%,
+    #f9a825 100%
+  );
+  color: #333;
+}
+
+.block-274877906944 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ffe082 0%,
+    #ffca28 50%,
+    #ff8f00 100%
+  );
+  color: #333;
+}
+
+.block-549755813888 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ffcc80 0%,
+    #ffa726 50%,
+    #f57c00 100%
+  );
+  color: white;
+}
+
+.block-1099511627776 {
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    #ffab91 0%,
+    #ff7043 50%,
+    #e64a19 100%
+  );
+  color: white;
+}
