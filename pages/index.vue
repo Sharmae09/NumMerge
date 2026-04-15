@@ -1,73 +1,6 @@
 <template>
   <ion-content class="home-content">
-    <!-- <ion-modal :is-open="showDailyReward" @didDismiss="showDailyReward = false">
-      <ion-card class="daily-modal">
-        <h2>🎁 Daily Reward</h2>
-        <p v-if="canClaim">Claim your {{ rewardAmount }} 💎 reward!</p>
-        <p v-else>Come back tomorrow for your next reward!</p>
-
-        <ion-button
-          v-if="canClaim"
-          @click="handleClaim"
-          color="success"
-          expand="block"
-          shape="round"
-        >
-          Claim Reward
-        </ion-button>
-        <ion-button v-else @click="closeModal" expand="block" color="medium">
-          Close
-        </ion-button>
-      </ion-card>
-    </ion-modal> -->
-    <!-- <ion-modal :is-open="showDailyReward" @didDismiss="showDailyReward = false">
-      <ion-card class="daily-modal">
-        <h2>🎁 Daily Rewards</h2>
-        <p class="text-center">Claim your gems daily to build your streak!</p>
-
-        <ion-grid class="calendar-grid">
-          <ion-row>
-            <ion-col
-              v-for="(day, index) in rewardDays"
-              :key="index"
-              class="day-cell"
-              :class="{
-                claimed: day.claimed,
-                today: day.today,
-                locked: day.locked,
-              }"
-            >
-              <div class="day-number">{{ index + 1 }}</div>
-              <div class="day-icon">
-                <ion-icon
-                  v-if="day.claimed"
-                  name="checkmark-circle"
-                  color="success"
-                />
-                <ion-icon v-else-if="day.today" name="gift" color="warning" />
-                <ion-icon v-else name="lock-closed" color="medium" />
-              </div>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-
-        <div class="mt-4">
-          <ion-button
-            v-if="canClaim"
-            @click="claimReward"
-            color="success"
-            expand="block"
-            shape="round"
-          >
-            Claim {{ rewardAmount }} 💎
-          </ion-button>
-          <ion-button v-else @click="closeModal" expand="block" color="medium">
-            Close
-          </ion-button>
-        </div>
-      </ion-card>
-    </ion-modal> -->
-    <ion-modal :is-open="showDailyReward" @didDismiss="showDailyReward = false">
+ <ion-modal :is-open="showDailyReward" @didDismiss="showDailyReward = false">
       <DailyReward @close="showDailyReward = false" />
     </ion-modal>
     <div class="status-bar">
@@ -110,7 +43,7 @@
         </div>
 
         <ion-button
-          @click="$router.push('/game')"
+          @click="startGame"
           class="play-button"
           shape="round"
           size="large"
@@ -130,7 +63,7 @@
 
 <script setup lang="ts">
 import { usePreferences } from "@/composables/usePreferences";
-const { bestScore, gems, bestBlock, setGems } = usePreferences();
+const { bestScore, gems, bestBlock, setGems, isSound } = usePreferences();
 import { play, settings } from "ionicons/icons";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
@@ -155,6 +88,13 @@ function openDailyReward() {
   showDailyReward.value = true;
 }
 
+const { playSound } = useSound();
+function startGame() {
+  if (isSound.value) {
+    playSound("game-start");
+  }
+  navigateTo("/game");
+}
 // async function handleClaim() {
 //   await claimReward();
 //   await Haptics.impact({ style: ImpactStyle.Medium });

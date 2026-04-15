@@ -28,4 +28,7 @@ export default defineNuxtConfig({
   //   viewer: true,
   //   // and more...
   // },
+  vite: {
+    assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg'],
+  },
 });

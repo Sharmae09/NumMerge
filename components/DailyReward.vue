@@ -19,7 +19,7 @@
         </p>
       </div>
 
-      <!-- Reward Grid (showing first 8 days) -->
+      <!-- Reward Grid (showing fipmrst 8 days) -->
       <ion-grid class="reward-grid">
         <ion-row>
           <ion-col v-for="day in 4" :key="day" size="3" class="reward-col">
@@ -127,6 +127,13 @@ const emit = defineEmits(["close"]);
 
 const handleClaimReward = async () => {
   const newTotal = await claimReward();
+
+  if (isSound.value) {
+    playSound("collect-gems");
+  }
+  if (isVibration.value) {
+    await Haptics.impact({ style: ImpactStyle.Light });
+  }
   console.log("Reward claimed! New total gems:", newTotal);
   // Optional: show success message or animation here
 
@@ -180,6 +187,11 @@ const handleClaimReward = async () => {
 .status-message p {
   font-size: 16px;
   color: #666;
+}
+.coin-stack {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .reward-grid {
