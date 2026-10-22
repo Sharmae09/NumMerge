@@ -4,6 +4,7 @@ const config: CapacitorConfig = {
   appId: "com.nummerge.com",
   appName: "NumMerge",
   webDir: "./.output/public",
+  
 };
 
 export default config;

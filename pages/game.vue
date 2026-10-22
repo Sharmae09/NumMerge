@@ -12,7 +12,7 @@
               color="success"
               :checked="isSound"
               @ionChange="onToggleSound"
-              >SOUNDs</ion-toggle
+              >SOUNDS</ion-toggle
             >
           </ion-item>
           <ion-item>
@@ -31,7 +31,7 @@
             expand="block"
             shape="round"
             color="success"
-            @click="isMenu = false"
+            @click="closeMenu"
           >
             Continue
           </ion-button>
@@ -49,7 +49,7 @@
               fill="solid"
               color="medium"
               shape="round"
-              @click="router.push('/')"
+              @click="goToHome"
             >
               Home
             </ion-button>
@@ -85,23 +85,27 @@
       </ion-card>
     </ion-modal>
     <!-- ~ Game Over Modal -->
+
     <ion-modal :isOpen="isGameOver" @didDismiss="isGameOver = false">
-      <div class="menu-over-modal">
-        <h2>Game Over!</h2>
-        <h3>Final Score: {{ score }}</h3>
-        <h3>Best Score: {{ bestScore }}</h3>
+      <!-- <ion-modal :isOpen="true" @didDismiss="isGameOver = false"> -->
+      <ion-card class="menu-over-modal">
+        <h1>Game Over!</h1>
+        <ion-list>
+          <ion-item> Final Score: {{ score }} </ion-item>
+          <ion-item> Best Score: {{ bestScore }} </ion-item>
+        </ion-list>
+
         <!-- <ion-button @click="resetGame" expand="block">Play Again</ion-button> -->
         <ion-button
           @click="resetGame"
           color="success"
           shape="round"
-          size="large"
           expand="full"
         >
           <ion-icon slot="end" :icon="play"></ion-icon>
           PLAY AGAIN
         </ion-button>
-      </div>
+      </ion-card>
     </ion-modal>
 
     <!-- ~ Top Status Bar -->
@@ -191,16 +195,39 @@
     <div class="bottom-section">
       <!-- ~ Active Power-up Indicator -->
       <div v-if="activePowerUp" class="active-powerup-banner">
-        <span v-if="activePowerUp === 'hammer'"
-          >🔨 Hammer Mode - Click a block to destroy it</span
-        >
+        <span v-if="activePowerUp === 'hammer'" class="powerup-col">
+          <div class="powerup-icon-banner">
+            <img
+              src="/assets/icons/hammer.png"
+              alt="Laser Line Power-up"
+              class="powerup-icon-banner"
+            />
+          </div>
+          <div class="powerup-banner-title">
+            <h1>Hammer Mode!</h1>
+            <h3>Click a block to destroy it</h3>
+          </div>
+        </span>
 
-        <span v-if="activePowerUp === 'swap'">
-          <h1>Swap Mode!</h1>
-          Swap any two blocks. <br />
-          {{
-            swapSelection.first ? "Select second block" : "Select first block"
-          }}
+        <span v-if="activePowerUp === 'swap'" class="powerup-col">
+          <div class="powerup-icon-banner">
+            <img
+              src="/assets/icons/swap.png"
+              alt="Laser Line Power-up"
+              class="powerup-icon-banner"
+            />
+          </div>
+          <div class="powerup-banner-title">
+            <h1>Swap Mode!</h1>
+            <h3>
+              Swap any two blocks.
+              <!-- {{
+                swapSelection.first
+                  ? "Select second block"
+                  : "Select first block"
+              }} -->
+            </h3>
+          </div>
         </span>
         <button @click="cancelPowerUp" class="cancel-btn">✕</button>
       </div>
@@ -213,7 +240,7 @@
             }}</span>
           </div>
           <ion-button
-            @click="isMenu = true"
+            @click="openMenu"
             class="bottom-btn"
             size="large"
             color="dark"
@@ -292,156 +319,6 @@
   </ion-content>
 </template>
 
-<style scoped>
-.menu-button {
-  --color: white;
-  --background: #1c6440;
-  --background-activated: #b9fddfcb;
-
-  --border-radius: 1.4rem;
-  --border-color: #ffffff20;
-  --border-style: solid;
-  --width: 10px;
-
-  --box-shadow: 0 2px 6px 0 rgb(0, 0, 0, 0.25);
-
-  --ripple-color: deeppink;
-
-  --padding-top: 0;
-  --padding-bottom: 0;
-}
-.active-powerup-banner {
-  position: relative; /* allow absolute children */
-  background: linear-gradient(135deg, #1b37b533 0%, #480d8241 100%);
-  color: white;
-  padding: 10px;
-  font-weight: 600;
-  font-size: 1rem;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 60px; /* so text doesn’t overlap button */
-  height: 100%;
-}
-
-.cancel-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 15px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-/* Active Power-up Banner */
-.active-powerup-banners {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 10px;
-  /* border-radius: 25px; */
-  font-weight: 600;
-  font-size: 1rem;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-}
-
-.cancel-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 15px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Power-up Active State */
-.powerup-active {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(102, 126, 234, 0.8),
-    0 0 40px rgba(102, 126, 234, 0.4);
-  animation: pulse 1.5s infinite;
-  border: 3px solid #667eea !important;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.8),
-      0 0 40px rgba(102, 126, 234, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(102, 126, 234, 1),
-      0 0 60px rgba(102, 126, 234, 0.6);
-  }
-}
-
-/* Power-up Disabled State */
-.powerup-disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Block Selection Styles */
-.block-selectable {
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.block-selectable:hover {
-  /* transform: scale(1.05); */
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-}
-
-.block-selected {
-  border: 3px solid #fff;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-  animation: selectedPulse 0.8s infinite;
-}
-
-@keyframes selectedPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 1);
-  }
-}
-
-.selection-indicator {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #667eea;
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 12px;
-  border: 2px solid white;
-  z-index: 10;
-}
-</style>
-
 <script setup lang="ts">
 import { reactive, ref, onMounted, nextTick } from "vue";
 import { addIcons } from "ionicons";
@@ -499,6 +376,8 @@ const highestTile = ref(2);
 
 const router = useRouter();
 
+// import { playSound } from "~/composables/useSoundEffects";
+
 const {
   bestScore,
   gems,
@@ -511,13 +390,17 @@ const {
   setIsSound,
   bestBlock,
 } = usePreferences();
+
+const { playSound } = useSound();
+// const { playSound } = useNuxtApp();
+
 async function onToggleVibration(event: CustomEvent) {
   const enabled = event.detail.checked;
   await setIsVibration(enabled);
 
   // Trigger a short haptic feedback when toggled ON
   if (enabled) {
-    await Haptics.impact({ style: ImpactStyle.Medium });
+    await Haptics.impact({ style: ImpactStyle.Light });
     await Haptics.vibrate();
   }
 }
@@ -527,8 +410,7 @@ async function onToggleSound(event: CustomEvent) {
 
   // Trigger a short haptic feedback when toggled ON
   if (enabled) {
-    await Haptics.impact({ style: ImpactStyle.Medium });
-    await Haptics.vibrate();
+    playSound("menu");
   }
 }
 const mergeIndicators = reactive<MergeIndicator[]>([]);
@@ -549,7 +431,18 @@ const history = reactive<
   { grid: Block[][]; score: number; nextBlock: number }[]
 >([]);
 
+function goToHome() {
+  if (isSound.value) {
+    playSound("menu");
+  }
+  router.push("/");
+}
+
 function resetGame() {
+  if (isSound.value) {
+    playSound("game-start");
+  }
+
   grid.forEach((c) => c.splice(0, c.length));
   score.value = 0;
   mergeIndicators.splice(0, mergeIndicators.length);
@@ -585,6 +478,9 @@ function tryUpdateHighestTile(value: number) {
 
     // Update best block if needed
     if (highestTile.value > bestBlock.value) {
+      if (isSound.value) {
+        playSound("new-bestblock");
+      }
       setBestBlock(highestTile.value);
       if (bestBlock.value != 2) {
         let n = Math.log2(bestBlock.value);
@@ -669,6 +565,19 @@ function checkGameOver() {
   return true;
 }
 
+function openMenu() {
+  isMenu.value = true;
+  if (isSound.value) {
+    playSound("menu");
+  }
+}
+function closeMenu() {
+  isMenu.value = false;
+  if (isSound.value) {
+    playSound("menu");
+  }
+}
+
 function updateBestScore() {
   if (score.value > bestScore.value) {
     bestScore.value = score.value;
@@ -689,7 +598,9 @@ function activatePowerUpMode(type: "hammer" | "swap") {
     alert("Not enough gems!");
     return;
   }
-
+  if (isSound.value) {
+    playSound("select-power");
+  }
   activePowerUp.value = type;
 
   // Reset swap selection when activating swap mode
@@ -719,10 +630,10 @@ async function useUndo() {
     alert("Not enough gems!");
     return;
   }
-  //   Magnet Merge 🧲
-  // Pulls all matching blocks toward your last shot.
+  if (isSound.value) {
+    playSound("activate-power");
+  }
 
-  // “Instant chain reaction.”
   if (history.length === 0) {
     alert("No moves to undo!");
     return;
@@ -742,6 +653,9 @@ async function useUndo() {
 async function useHammer(col: number, row: number) {
   if (!grid[col] || !grid[col][row]) return;
 
+  if (isSound.value) {
+    playSound("activate-power");
+  }
   saveHistory();
   await setGems(gems.value - powerUpCosts.hammer);
 
@@ -761,6 +675,9 @@ function isBlockSelected(col: number, row: number): boolean {
 async function useSwap(c1: number, r1: number, c2: number, r2: number) {
   if (!grid[c1]?.[r1] || !grid[c2]?.[r2]) return;
 
+  if (isSound.value) {
+    playSound("activate-power");
+  }
   saveHistory();
   await setGems(gems.value - powerUpCosts.hammer);
 
@@ -894,46 +811,97 @@ function findConnectedBlocks(col: number, row: number): Position[] {
 }
 
 let isOnCooldown = false;
-
 async function shootBlock(columnIndex: number) {
-  saveHistory();
-
   if (isOnCooldown) return;
-
   isOnCooldown = true;
 
-  await Haptics.impact({ style: ImpactStyle.Medium });
+  try {
+    saveHistory();
 
-  if (isColumnFull(columnIndex) || isGameOver.value) {
-    const lastBlock = grid[columnIndex][maxHeight - 1].value;
-    if (isGameOver.value) return;
-    else if (lastBlock != nextBlock.value) {
+    if (isSound.value) {
+      playSound("shoot");
+    }
+    if (isVibration.value) {
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    }
+    // NativeAudio.play({ assetId: "shoot" });
+
+    const lastBlock = grid[columnIndex][maxHeight - 1]?.value;
+
+    if (
+      isGameOver.value ||
+      (lastBlock != undefined && lastBlock != nextBlock.value)
+    ) {
       return;
     }
-  }
 
-  grid[columnIndex].push(createBlock(nextBlock.value));
+    grid[columnIndex].push(createBlock(nextBlock.value));
+    generateNextBlock();
 
-  generateNextBlock();
-  if (isVibration.value) {
-    // console.log("Shooting block into column", columnIndex);
-    await Haptics.impact({ style: ImpactStyle.Medium });
-  }
-  await mergeConnectedBlocks(columnIndex);
+    if (isVibration.value) {
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    }
 
-  await nextTick();
-  if (checkGameOver()) {
-    isGameOver.value = true;
-    updateBestScore();
+    await mergeConnectedBlocks(columnIndex);
+
+    await nextTick();
+    if (checkGameOver()) {
+      isGameOver.value = true;
+
+      if (isSound.value) {
+        playSound("game-over");
+      }
+      if (isVibration.value) {
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+      }
+      updateBestScore();
+    }
+  } finally {
+    // Always reset cooldown no matter what
+    setTimeout(() => {
+      isOnCooldown = false;
+    }, 50);
   }
-  setTimeout(() => {
-    isOnCooldown = false;
-  }, 300);
 }
+
+// async function shootBlock(columnIndex: number) {
+//   saveHistory();
+
+//   if (isOnCooldown) return;
+
+//   isOnCooldown = true;
+
+//   await Haptics.impact({ style: ImpactStyle.Medium });
+
+//   if (isColumnFull(columnIndex) || isGameOver.value) {
+//     const lastBlock = grid[columnIndex][maxHeight - 1].value;
+//     if (isGameOver.value) return;
+//     else if (lastBlock != nextBlock.value) {
+//       return;
+//     }
+//   }
+
+//   grid[columnIndex].push(createBlock(nextBlock.value));
+
+//   generateNextBlock();
+//   if (isVibration.value) {
+//     // console.log("Shooting block into column", columnIndex);
+//     await Haptics.impact({ style: ImpactStyle.Medium });
+//   }
+//   await mergeConnectedBlocks(columnIndex);
+
+//   await nextTick();
+//   if (checkGameOver()) {
+//     isGameOver.value = true;
+//     updateBestScore();
+//   }
+//   setTimeout(() => {
+//     isOnCooldown = false;
+//   }, 300);
+// }
 
 async function mergeConnectedBlocks(targetColumn?: number) {
   clearAllAnimationStates();
-  await Haptics.impact({ style: ImpactStyle.Medium });
 
   let isFirstMerge = targetColumn !== undefined;
   const shotPos = isFirstMerge
@@ -1052,6 +1020,13 @@ async function mergeConnectedBlocks(targetColumn?: number) {
 
     isFirstMerge = false;
 
+    if (isSound.value) {
+      playSound("merge");
+    }
+    if (isVibration.value) {
+      await Haptics.impact({ style: ImpactStyle.Light });
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 250));
     await nextTick();
   }
@@ -1110,3 +1085,172 @@ onUnmounted(() => {
   saveGame();
 });
 </script>
+<style scoped>
+.menu-button {
+  --color: white;
+  --background: #1c6440;
+  --background-activated: #b9fddfcb;
+
+  --border-radius: 1.4rem;
+  --border-color: #ffffff20;
+  --border-style: solid;
+  --width: 10px;
+
+  --box-shadow: 0 2px 6px 0 rgb(0, 0, 0, 0.25);
+
+  --ripple-color: deeppink;
+
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+.active-powerup-banner {
+  position: relative; /* allow absolute children */
+  background: linear-gradient(90deg, #00000033 0%, #8103ff41 100%);
+  color: white;
+  padding: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 60px; /* so text doesn’t overlap button */
+  height: 100%;
+}
+
+.cancel-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+/* Active Power-up Banner */
+.active-powerup-banners {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px;
+  /* border-radius: 25px; */
+  font-weight: 600;
+  font-size: 1rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Power-up Active State */
+.powerup-active {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.8),
+    0 0 40px rgba(102, 126, 234, 0.4);
+  animation: pulse 1.5s infinite;
+  border: 3px solid #667eea !important;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.8),
+      0 0 40px rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(102, 126, 234, 1),
+      0 0 60px rgba(102, 126, 234, 0.6);
+  }
+}
+
+/* Power-up Disabled State */
+.powerup-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Block Selection Styles */
+.block-selectable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.block-selectable:hover {
+  /* transform: scale(1.05); */
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.block-selected {
+  border: 3px solid #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  animation: selectedPulse 0.8s infinite;
+}
+
+@keyframes selectedPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 1);
+  }
+}
+
+.selection-indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #667eea;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  border: 2px solid white;
+  z-index: 10;
+}
+.powerup-banner-titles h1 {
+  font-weight: 800;
+}
+
+.powerup-icon-banner {
+  min-width: 65px;
+  min-height: 65px;
+  height: calc(3rem + 5vw);
+  width: calc(3rem + 5vw);
+  border: solid 1px white;
+  border-radius: 12px;
+  margin-right: 1rem;
+}
+.powerup-col {
+  display: flex;
+  align-items: center;
+  width: 100vw;
+  justify-content: center;
+}
+</style>
